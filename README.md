@@ -16,6 +16,7 @@ Este documento define a arquitetura oficial, tecnologias e padrões de codifica�
 6. [Fluxo de Trabalho e Versionamento](#6-fluxo-de-trabalho-e-versionamento-repositório-semobgitlab)
 7. [Guia de Comandos Locais](#7-guia-de-comandos-locais)
 8. [Containerização com Docker](#8-containerização-com-docker)
+9. [Configuração do Vite (vite.config.ts)](#9-configuração-do-vite-viteconfigts)
 
 ---
 
@@ -201,4 +202,50 @@ docker run -d -p 8080:80 --name semob-front semob-front-app
    docker compose up -d --build
    ```
    *(Acesse em: `http://localhost`)*
+
+---
+
+## 9. ⚡ Configuração do Vite (`vite.config.ts`)
+
+O arquivo `vite.config.ts` é o coração do ecossistema de build, desenvolvimento e roteamento local da aplicação. Em nossos projetos de grande porte na SEMOB, ele assume funções cruciais de segurança, controle de ambiente local, otimização de cache de pacotes, e suporte de compilação multiplataforma.
+
+### 9.1 Visão Geral das Camadas do Arquivo
+
+O arquivo padrão de produção está estruturado em 5 blocos funcionais principais:
+
+1. **Leitura Customizada de Ambientes (`dotenv`)**:
+   Diferente do carregamento padrão de variáveis de ambiente do Vite, o arquivo executa um bootstrap personalizado para arquivos específicos do ecossistema como `.env.modules` e `.envFiscalizacaoAcesso`. Isso unifica o escopo local de variáveis antes de expor aos plugins e compilação do Vite.
+
+2. **`envManagerPlugin` (Plugin do Servidor de Dev)**:
+   Um middleware do servidor de desenvolvimento local que injeta endpoints REST privados para o navegador interagir diretamente com o sistema de arquivos local (`fs`) do desenvolvedor.
+   * **`/api-local-env/read`**: Lê chaves de arquivos `.env` dinamicamente via interface do usuário.
+   * **`/api-local-env/update`**: Permite que ferramentas internas escrevam modificações em arquivos de configuração locais direto da UI.
+   * **`/api-local-env/toggle-module`**: Habilita ou desabilita módulos do sistema editando programaticamente o arquivo `src/config/modules.ts`.
+   * **Serviço de Cron Integrado**: Executa varreduras de agendamento de modificações locais a cada 5 segundos no background do Node.
+
+3. **Mapeamento de Proxies e Burlar CORS**:
+   Durante o desenvolvimento local, o navegador seria barrado pela política de CORS ao tentar bater direto em domínios ou IPs restritos da SEMOB. O Vite resolve isso atuando como um servidor proxy reverso local:
+   * **Rotas de Dados**: Redireciona caminhos locais como `/api-semob-dados` e `/api-vol` para os servidores de produção oficiais (`dados.semob.df.gov.br`, etc.).
+   * **Rotas de Serviços Legados (PCPN)**: Agrupa prefixos como `/autenticador`, `/scl`, `/consultasonibus`, `/eauto`, `/log`, `/CDP`, `/pct` e mapeia para a URL do barramento homologado (`VITE_API_PCPN_HOST`).
+   * **Rotas de Bancos de Dados Locais**: Redireciona as rotas locais `/operadoras`, `/mobilidade`, `/infraestrutura`, `/linhas` e `/itinerarios` para o microsserviço rodando localmente na máquina (`http://localhost:3333`).
+
+4. **Configuração de PWA (Progressive Web App)**:
+   Utiliza o `vite-plugin-pwa` para gerar o Service Worker automatizado e controlar a política de cache offline do aplicativo.
+   * Eleva o limite máximo de cache por arquivo para `10MB` para suportar o carregamento offline de bibliotecas de mapas (Leaflet), ícones pesados e componentes de imagem.
+   * Padroniza os formatos de `globPatterns` e propriedades de metadados do aplicativo (nome, cores institucionais e ícones adaptativos).
+
+5. **Otimizações de Chunking e Aliases Rollup**:
+   * **`manualChunks`**: Separa bibliotecas de terceiros pesadas do bundle da lógica de negócio. Agrupa `react`, `react-dom` e `react-router-dom` em `vendor-react`, e os ícones pesados de `lucide-react` em `vendor-lucide`. Isso maximiza o cache do navegador e otimiza o carregamento das páginas.
+   * **Alias de Plataformas**: Mapeia a biblioteca `react-native` para `react-native-web`. Isso permite usar pacotes cross-platform do ecossistema Expo diretamente no navegador de computadores sem quebras de compilação.
+
+### 9.2 Diretrizes e Boas Práticas Obrigatórias
+
+Para criar ou herdar projetos sob o padrão SEMOB, as regras abaixo são de cumprimento obrigatório:
+
+1. **Nunca Chumbe Credenciais de Produção**:
+   Configurações de proxy e links de servidores devem ser sempre parametrizados no arquivo `.env` e carregados de forma dinâmica no Vite utilizando a função `loadEnv(mode, process.cwd(), '')`.
+2. **Defina ManualChunks para Bibliotecas de Terceiros Volumosas**:
+   Sempre que adicionar dependências externas grandes (como Leaflet, bibliotecas de gráficos, exportadores de PDF), declare o chunk correspondente na propriedade `build.rollupOptions.output.manualChunks` para evitar lentidão no carregamento inicial da aplicação.
+3. **Mantenha o Plugin Dev Restrito ao Server**:
+   O plugin `envManagerPlugin` deve atuar unicamente na fase de desenvolvimento local (`configureServer`). Nunca exponha rotas de sistema de arquivos ou lógica baseada em Node no build público estático servido em produção.
 
