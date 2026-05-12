@@ -15,6 +15,7 @@ Este documento define a arquitetura oficial, tecnologias e padrões de codifica�
 5. [Variáveis de Ambiente (.env)](#5-variáveis-de-ambiente-env)
 6. [Fluxo de Trabalho e Versionamento](#6-fluxo-de-trabalho-e-versionamento-repositório-semobgitlab)
 7. [Guia de Comandos Locais](#7-guia-de-comandos-locais)
+8. [Containerização com Docker](#8-containerização-com-docker)
 
 ---
 
@@ -164,3 +165,40 @@ Para executar esses comandos, certifique-se de estar dentro da pasta `android/` 
   ```bash
   npx cap run android
   ```
+
+---
+
+## 8. 🐳 Containerização com Docker
+
+A aplicação conta com suporte nativo para empacotamento Docker multi-estágio (*Multi-stage Build*), otimizando o tamanho final da imagem e garantindo que o build estático seja servido por uma instância leve do Nginx configurada para SPAs.
+
+### 8.1 Estrutura de Arquivos Criados
+
+* **`Dockerfile`**: Executa o build da aplicação no ambiente Node e copia os artefatos estáticos prontos para a imagem Nginx.
+* **`nginx.conf`**: Configuração dedicada do servidor Nginx com redirecionamentos amigáveis de rota para o `index.html` (essencial para evitar erro 404 em rotas do React Router) e cache otimizado de assets.
+* **`docker-compose.yml`**: Orquestrador local para subir a aplicação em ambiente de produção em um único comando.
+
+### 8.2 Injeção de Variáveis no Build (Vite)
+
+> ⚠️ **Atenção:** Aplicações Single Page (SPA) rodam no navegador do usuário e têm suas variáveis de ambiente compiladas e chumbadas em tempo de build. Por isso, a injeção do `.env` deve ser feita no momento da criação da imagem.
+
+A imagem aceita o argumento de build `VITE_API_URL` para injetar a rota correta do Backend:
+
+#### Via CLI Docker:
+```bash
+docker build --build-arg VITE_API_URL=https://api.semob.df.gov.br -t semob-front-app .
+```
+
+#### Executando o Container:
+```bash
+docker run -d -p 8080:80 --name semob-front semob-front-app
+```
+
+#### Via Docker Compose (Local/Homologação):
+1. Edite o argumento `VITE_API_URL` no `docker-compose.yml` se necessário.
+2. Suba o container com:
+   ```bash
+   docker compose up -d --build
+   ```
+   *(Acesse em: `http://localhost`)*
+
