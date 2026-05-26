@@ -115,3 +115,14 @@ export const formatarPlaca = (placa: string): string => {
   // Mercosul fica sem hífen (ou formatado de acordo com a regra de negócio local)
   return limpa;
 };
+
+/**
+ * Formata uma matrícula institucional da SEMOB no padrão: 000.000-0
+ */
+export const formatarMatricula = (matricula: string | number): string => {
+  if (!matricula) return '';
+  const limpo = String(matricula).replace(/\D/g, '');
+  // A matrícula GDF (como 2871971) tem 7 dígitos formatados como 287.197-1
+  if (limpo.length !== 7) return String(matricula);
+  return limpo.replace(/(\d{3})(\d{3})(\d{1})/, '$1.$2-$3');
+};
