@@ -1,5 +1,150 @@
+import { ButtonHTMLAttributes, ReactNode } from 'react';
+
 export interface Operadora {
   idOperadora: number;
   nmOperadora: string;
-  // Adicionar demais campos espelhando a Entity do Backend
+}
+
+export interface Usuario {
+  id: string; // Nickname
+  idUsuario?: number;
+  nome: string;
+  email: string;
+  matricula: string;
+  cargo: string;
+  departamento: string;
+  rotasPermitidas: string[];
+  permissoesServicos: Record<string, 'LEITURA' | 'ESCRITA'>;
+}
+
+export interface SubMenuModulo {
+  id: string;
+  titulo: string;
+  icone?: string;
+  rota: string | null;
+  componente?: any;
+  ocultar?: boolean;
+}
+
+export interface ModuloConfig {
+  id: string;
+  sigla: string;
+  nome: string;
+  descricao: string;
+  icone?: string;
+  imagem?: string;
+  cor?: string;
+  rota: string;
+  componente: any;
+  ativo: boolean;
+  pwaTarget?: string;
+  subMenus?: SubMenuModulo[];
+}
+
+export interface CdpPessoaAd {
+  matriculaPessoaAd?: string | number;
+  nome: string;
+  matriculaEmail: string;
+  email: string;
+  departamento: string;
+  cargo: string;
+  telefone: string;
+  ativo: string;
+}
+
+export interface CdpUsuario {
+  idUsuario?: number;
+  matriculaPessoaAd?: string | number;
+  matriculaPreposto?: number;
+  nickname: string;
+  ativo: string;
+  ultimoAcesso?: string;
+  dataCriacao?: string;
+  idGrupo?: number;
+  pessoaAd?: CdpPessoaAd;
+}
+
+export interface CdpTipoAcesso {
+  idTipoAcesso?: number;
+  nome: string;
+  descricao: string;
+  ativo?: string;
+}
+
+export interface CdpUsuarioAcesso {
+  idUsuarioAcesso?: number;
+  idUsuario: number;
+  idPerfil: number;
+  idTipoAcesso?: number;
+  dataInicio?: string;
+  dataFim?: string;
+  ativo?: string;
+  perfil?: CdpTipoAcesso;
+}
+
+// ----------------------------------------------------
+// Migrated Interfaces from Services, Hooks and Layouts
+// ----------------------------------------------------
+
+export interface LoginResponse {
+  ok: boolean;
+  token?: string;
+  user?: string; // nickname
+  message?: string;
+}
+
+export interface AuthContextType {
+  usuario: Usuario | null;
+  estaAutenticado: boolean;
+  erroLogin: string | null;
+  loadingAuth: boolean;
+  fazerLogin: (usuarioInput: string, senhaInput: string) => Promise<void>;
+  fazerLogout: () => void;
+  temAcesso: (endpoint: string, nivelRequerido?: 'LEITURA' | 'ESCRITA') => boolean;
+  temEscrita: (endpoint: string) => boolean;
+  mockOverridePermissions: (rotas: string[], servicos: Record<string, 'LEITURA' | 'ESCRITA'>) => void;
+}
+
+export interface ModulesContextType {
+  modulos: ModuloConfig[];
+  loading: boolean;
+}
+
+export interface AppContextType {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+  activeModuleId: string;
+  activeSubMenuId: string | null;
+  navegarPara: (moduleId: string, subMenuId?: string | null) => void;
+  sidebarOpen: boolean;
+  toggleSidebar: () => void;
+  setSidebarOpen: (open: boolean) => void;
+}
+
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'danger' | 'outline';
+  size?: 'sm' | 'md' | 'lg';
+  loading?: boolean;
+}
+
+export interface PopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  variant?: 'info' | 'success' | 'warning' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  children: ReactNode;
+  actions?: ReactNode;
+}
+
+export interface PlaceholderViewProps {
+  name: string;
+  description: string;
+}
+
+export interface AuthState {
+  usuario: Usuario | null;
+  autenticado: boolean;
+  setUsuario: (usuario: Usuario | null) => void;
+  logout: () => void;
 }

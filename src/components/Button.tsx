@@ -1,10 +1,5 @@
 import React from 'react';
-
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
-  loading?: boolean;
-}
+import { ButtonProps } from '../types';
 
 export const Button: React.FC<ButtonProps> = ({
   children,
@@ -15,7 +10,6 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  // Estilização base com variáveis CSS ou classes inline seguras (compatível com Tailwind se ativo)
   const baseStyle = {
     display: 'inline-flex',
     alignItems: 'center',
@@ -32,30 +26,33 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variants = {
     primary: {
-      backgroundColor: '#3b82f6',
+      backgroundColor: '#2563eb',
       color: '#ffffff',
-      boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.2)',
+      boxShadow: '0 4px 10px rgba(37, 99, 235, 0.25)',
     },
     secondary: {
-      backgroundColor: '#374151',
-      color: '#f3f4f6',
+      backgroundColor: 'var(--semob-secondary)',
+      borderColor: 'var(--semob-border)',
+      borderWidth: '1px',
+      color: 'var(--semob-text)',
     },
     danger: {
-      backgroundColor: '#ef4444',
+      backgroundColor: 'var(--semob-danger)',
       color: '#ffffff',
-      boxShadow: '0 4px 6px -1px rgba(239, 68, 68, 0.2)',
+      boxShadow: '0 4px 10px rgba(239, 68, 68, 0.25)',
     },
     outline: {
       backgroundColor: 'transparent',
-      borderColor: '#4b5563',
-      color: '#f3f4f6',
+      borderColor: 'var(--semob-border)',
+      borderWidth: '1px',
+      color: 'var(--semob-text)',
     }
   };
 
   const sizes = {
-    sm: { padding: '0.375rem 0.75rem', fontSize: '0.875rem' },
-    md: { padding: '0.5rem 1.25rem', fontSize: '1rem' },
-    lg: { padding: '0.75rem 1.75rem', fontSize: '1.125rem' }
+    sm: { padding: '0.4rem 0.85rem', fontSize: '0.82rem' },
+    md: { padding: '0.55rem 1.35rem', fontSize: '0.9rem' },
+    lg: { padding: '0.75rem 1.85rem', fontSize: '1.05rem' }
   };
 
   const activeVariant = variants[variant];
@@ -65,10 +62,23 @@ export const Button: React.FC<ButtonProps> = ({
     <button
       style={{ ...baseStyle, ...activeVariant, ...activeSize }}
       disabled={disabled || loading}
-      onMouseDown={(e) => { if (!disabled && !loading) e.currentTarget.style.transform = 'scale(0.95)' }}
+      onMouseDown={(e) => { if (!disabled && !loading) e.currentTarget.style.transform = 'scale(0.96)' }}
       onMouseUp={(e) => { e.currentTarget.style.transform = 'scale(1)' }}
-      onMouseEnter={(e) => { if (!disabled && !loading) e.currentTarget.style.filter = 'brightness(1.1)' }}
-      onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; e.currentTarget.style.transform = 'scale(1)' }}
+      onMouseEnter={(e) => { 
+        if (!disabled && !loading) {
+          e.currentTarget.style.filter = 'brightness(1.12)';
+          if (variant === 'outline' || variant === 'secondary') {
+            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+          }
+        }
+      }}
+      onMouseLeave={(e) => { 
+        e.currentTarget.style.filter = 'none'; 
+        e.currentTarget.style.transform = 'scale(1)';
+        if (variant === 'outline' || variant === 'secondary') {
+          e.currentTarget.style.backgroundColor = variants[variant].backgroundColor;
+        }
+      }}
       {...props}
     >
       {loading ? (
@@ -82,11 +92,7 @@ export const Button: React.FC<ButtonProps> = ({
         </svg>
       ) : null}
       {children}
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </button>
   );
 };
+export default Button;

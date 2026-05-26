@@ -1,25 +1,17 @@
 import { create } from 'zustand';
-
-interface Usuario {
-  id: number;
-  nome: string;
-  cargo: string;
-  token: string;
-}
-
-interface AuthState {
-  usuario: Usuario | null;
-  autenticado: boolean;
-  setUsuario: (usuario: Usuario | null) => void;
-  logout: () => void;
-}
+import { AuthState } from '../types';
 
 export const useAuthStore = create<AuthState>((set) => ({
   usuario: {
-    id: 1,
+    id: 'developer',
+    idUsuario: 1,
     nome: 'Desenvolvedor SEMOB',
+    email: 'developer@semob.df.gov.br',
+    matricula: '12345-6',
     cargo: 'Auditor Técnico',
-    token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+    departamento: 'SUOP',
+    rotasPermitidas: [],
+    permissoesServicos: {}
   },
   autenticado: true,
   setUsuario: (usuario) => set({ usuario, autenticado: !!usuario }),

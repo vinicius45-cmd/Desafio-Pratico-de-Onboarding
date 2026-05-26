@@ -12,11 +12,27 @@ export const useOperadoras = () => {
       const res = await OperadoraService.listar(filtro);
       setDados(res);
     } catch (err) {
-      // Aqui integra com o padrão de erro do backend (Interceptor já atua)
+      // Erro formatado e capturado pelo Interceptor do Axios
     } finally {
       setLoading(false);
     }
   }, []);
 
-  return { dados, loading, carregar };
+  const cadastrar = useCallback(async (nome: string) => {
+    setLoading(true);
+    try {
+      await OperadoraService.cadastrar(nome);
+      // Recarrega a lista para mostrar a nova operadora inserida
+      const res = await OperadoraService.listar('');
+      setDados(res);
+      return true;
+    } catch (err) {
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { dados, loading, carregar, cadastrar };
 };
+export default useOperadoras;
