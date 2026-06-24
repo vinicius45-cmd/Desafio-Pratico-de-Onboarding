@@ -1,5 +1,12 @@
 import { ButtonHTMLAttributes, ReactNode } from 'react';
 
+export interface Validador {
+  idValidador: number;
+  numeroSerie: string;
+  prefixoOnibus: string;
+  status: 'ATIVO' | 'INATIVO';
+}
+
 export interface Operadora {
   idOperadora: number;
   nmOperadora: string;

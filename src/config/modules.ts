@@ -5,6 +5,7 @@ import { withProps } from '../screens/PlaceholderView';
 // Lazy load modules/screens to support code splitting
 const DashboardDocs = lazy(() => import('../screens/DashboardDocs'));
 const OperadoraList = lazy(() => import('../screens/OperadoraList'));
+const ValidadorList = lazy(() => import('../screens/ValidadorList'));
 
 const raw_modulos_sistema: ModuloConfig[] = [
   {
@@ -46,7 +47,13 @@ const raw_modulos_sistema: ModuloConfig[] = [
     ativo: true,
     subMenus: [
       { id: 'sif-fisc', titulo: 'Auto de Infração', icone: 'FileText', rota: 'sif-fiscalizacao', componente: withProps('SIF - Novo Auto', 'Emissão de auto de infração digital.') },
-      { id: 'sif-val', titulo: 'Validadores', icone: 'CreditCard', rota: 'sif-validador', componente: withProps('SIF - Validadores', 'Gerenciamento de validadores eletrônicos.') },
+      { 
+        id: 'sif-val', 
+        titulo: 'Validadores', 
+        icone: 'CreditCard', 
+        rota: 'sif-valador', 
+        componente: ValidadorList // Alterado de placeholder para a tela real do desafio
+      },
     ]
   },
   {
