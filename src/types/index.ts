@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes, ReactNode } from 'react';
+import { ButtonHTMLAttributes, ComponentType, ReactNode } from 'react';
 
 export interface Validador {
   idValidador: number;
@@ -24,12 +24,14 @@ export interface Usuario {
   permissoesServicos: Record<string, 'LEITURA' | 'ESCRITA'>;
 }
 
+export type AppViewComponent = ComponentType<Record<string, never>>;
+
 export interface SubMenuModulo {
   id: string;
   titulo: string;
   icone?: string;
   rota: string | null;
-  componente?: any;
+  componente?: AppViewComponent;
   ocultar?: boolean;
 }
 
@@ -42,7 +44,7 @@ export interface ModuloConfig {
   imagem?: string;
   cor?: string;
   rota: string;
-  componente: any;
+  componente: AppViewComponent;
   ativo: boolean;
   pwaTarget?: string;
   subMenus?: SubMenuModulo[];

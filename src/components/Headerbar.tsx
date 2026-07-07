@@ -1,241 +1,125 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  ChevronDown,
+  ChevronUp,
+  LogOut,
+  Menu,
+  Moon,
+  Search,
+  Sun
+} from 'lucide-react';
 import { useApp } from '../app/AppProvider';
+import { useAuth } from '../hooks/useAuth';
 import { useModules } from '../hooks/useModules';
-import { Sun, Moon, LogOut, ChevronDown, ChevronUp, Menu } from 'lucide-react';
+
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0 || !parts[0]) {
+    return 'US';
+  }
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+};
 
 export const Headerbar: React.FC = () => {
   const { usuario, fazerLogout } = useAuth();
   const { theme, toggleTheme, activeModuleId, activeSubMenuId, toggleSidebar } = useApp();
   const { modulos } = useModules();
-  
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (dropdownRef.current?.contains(event.target as Node) === false) {
         setDropdownOpen(false);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Find active module/submenu title
-  const activeMod = modulos.find(m => m.id === activeModuleId);
-  const activeSub = activeMod?.subMenus?.find(s => s.id === activeSubMenuId);
-  
-  const titleDisplay = activeSub 
-    ? `${activeMod?.nome} ❯ ${activeSub.titulo}`
-    : (activeMod?.nome || 'Sistema SISMOB');
-  
-  const getInitials = (name: string) => {
-    if (!name) return 'US';
-    const parts = name.split(' ');
-    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  };
+  const activeModule = modulos.find((module) => module.id === activeModuleId);
+  const activeSubmenu = activeModule?.subMenus?.find((submenu) => submenu.id === activeSubMenuId);
+  const titleDisplay = activeSubmenu
+    ? `${activeModule?.nome ?? 'Sistema'} / ${activeSubmenu.titulo}`
+    : activeModule?.nome ?? 'Sistema de Gestão';
 
   return (
-    <header
-      style={{
-        background: 'var(--semob-header-bg)',
-        borderBottom: '1px solid var(--semob-header-border)',
-        height: '64px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 1.25rem',
-        position: 'sticky',
-        top: 0,
-        zIndex: 40,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
-        transition: 'background-color 0.3s, border-color 0.3s'
-      }}
-    >
-      {/* Title / Breadcrumb / Mobile Hamburger Toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+    <header className="app-header">
+      <div className="app-header__title-group">
         <button
+          aria-label="Abrir menu"
+          className="app-header__menu-button show-mobile-flex"
           onClick={toggleSidebar}
-          className="show-mobile-flex"
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--semob-text)',
-            cursor: 'pointer',
-            padding: '0.25rem',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: '0.25rem'
-          }}
-          title="Alternar Menu"
+          type="button"
         >
-          <Menu size={20} />
+          <Menu size={21} />
         </button>
-
-        <h2 
-          className="header-title"
-          style={{ 
-            fontSize: '0.92rem', 
-            fontWeight: 700, 
-            color: 'var(--semob-text)', 
-            margin: 0,
-            whiteSpace: 'nowrap',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden'
-          }}
-        >
-          {titleDisplay}
-        </h2>
+        <div>
+          <span className="app-header__eyebrow">Página atual</span>
+          <h1 className="app-header__title">{titleDisplay}</h1>
+        </div>
       </div>
 
-      {/* Action utilities */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
-        {/* Theme Toggle */}
+      <form className="app-header__search" role="search">
+        <Search aria-hidden="true" size={18} />
+        <input aria-label="Buscar no sistema" placeholder="Buscar processos, prazos ou módulos" type="search" />
+      </form>
+
+      <div className="app-header__actions">
         <button
+          aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
+          className="app-header__icon-button"
           onClick={toggleTheme}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--semob-text-muted)',
-            cursor: 'pointer',
-            padding: '0.35rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'color 0.2s',
-            borderRadius: '50%'
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--semob-text)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--semob-text-muted)' }}
-          title={theme === 'dark' ? 'Mudar para Tema Claro' : 'Mudar para Tema Escuro'}
+          type="button"
         >
           {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
         </button>
 
-        {/* Vertical divider */}
-        <div style={{ width: '1px', height: '20px', background: 'var(--semob-border)' }} />
-
-        {/* Profile Dropdown Container */}
         {usuario && (
-          <div ref={dropdownRef} style={{ position: 'relative' }}>
+          <div className="app-header__profile" ref={dropdownRef}>
             <button
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '0.25rem',
-                borderRadius: '0.5rem',
-                color: 'var(--semob-text)',
-                textAlign: 'left'
-              }}
+              aria-expanded={dropdownOpen}
+              className="app-header__profile-button"
+              onClick={() => setDropdownOpen((current) => !current)}
+              type="button"
             >
-              {/* User initials bubble */}
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, var(--semob-primary) 0%, var(--semob-accent) 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#ffffff',
-                  fontWeight: 700,
-                  fontSize: '0.8rem',
-                  boxShadow: '0 2px 5px rgba(37, 99, 235, 0.15)'
-                }}
-              >
-                {getInitials(usuario.nome)}
-              </div>
-
-              {/* User text names - hidden on small mobile devices */}
-              <div className="hide-mobile" style={{ display: 'flex', flexDirection: 'column', fontSize: '0.8rem' }}>
-                <span style={{ fontWeight: 700, color: 'var(--semob-text)' }}>{usuario.nome.split(' ')[0]}</span>
-                <span style={{ fontSize: '0.68rem', color: 'var(--semob-text-muted)' }}>{usuario.cargo}</span>
-              </div>
-              
-              {dropdownOpen ? <ChevronUp size={14} style={{ color: 'var(--semob-text-muted)' }} /> : <ChevronDown size={14} style={{ color: 'var(--semob-text-muted)' }} />}
+              <span className="app-header__avatar">{getInitials(usuario.nome)}</span>
+              <span className="app-header__user-copy hide-mobile">
+                <strong>{usuario.nome.split(' ')[0]}</strong>
+                <small>{usuario.cargo}</small>
+              </span>
+              {dropdownOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
             </button>
 
-            {/* Dropdown Overlay */}
             {dropdownOpen && (
-              <div
-                className="animate-scale-up"
-                style={{
-                  position: 'absolute',
-                  right: 0,
-                  top: '48px',
-                  width: '260px',
-                  borderRadius: '0.75rem',
-                  background: 'var(--semob-surface)',
-                  border: '1px solid var(--semob-border)',
-                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 1px rgba(0, 0, 0, 0.1)',
-                  padding: '1rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.75rem',
-                  zIndex: 100
-                }}
-              >
-                {/* Header Profile */}
-                <div style={{ borderBottom: '1px solid var(--semob-border)', paddingBottom: '0.5rem' }}>
-                  <h4 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--semob-text)', fontWeight: 700 }}>{usuario.nome}</h4>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--semob-text-muted)', wordBreak: 'break-all' }}>{usuario.email}</span>
+              <div className="app-header__dropdown">
+                <div className="app-header__dropdown-user">
+                  <strong>{usuario.nome}</strong>
+                  <span>{usuario.email}</span>
                 </div>
 
-                {/* Meta details list */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.75rem', color: 'var(--semob-text-muted)' }}>
-                  <div style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between' }}>
-                    <span>Matrícula:</span>
-                    <strong style={{ color: 'var(--semob-text)' }}>{usuario.matricula}</strong>
+                <dl className="app-header__meta">
+                  <div>
+                    <dt>Matrícula</dt>
+                    <dd>{usuario.matricula}</dd>
                   </div>
-                  <div style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between' }}>
-                    <span>Perfil:</span>
-                    <strong style={{ color: 'var(--semob-text)' }}>{usuario.cargo}</strong>
+                  <div>
+                    <dt>Perfil</dt>
+                    <dd>{usuario.cargo}</dd>
                   </div>
-                  <div className="hide-mobile" style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between' }}>
-                    <span>Dpto:</span>
-                    <strong style={{ color: 'var(--semob-text)' }}>{usuario.departamento}</strong>
+                  <div>
+                    <dt>Departamento</dt>
+                    <dd>{usuario.departamento}</dd>
                   </div>
-                </div>
+                </dl>
 
-                {/* Logout Button */}
-                <button
-                  onClick={fazerLogout}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    width: '100%',
-                    padding: '0.55rem',
-                    borderRadius: '0.5rem',
-                    background: 'rgba(239, 68, 68, 0.08)',
-                    border: '1px solid rgba(239, 68, 68, 0.15)',
-                    color: '#ef4444',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem',
-                    fontWeight: 700,
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#ef4444';
-                    e.currentTarget.style.color = '#ffffff';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
-                    e.currentTarget.style.color = '#ef4444';
-                  }}
-                >
-                  <LogOut size={14} />
-                  Sair do Sistema
+                <button className="app-header__logout" onClick={fazerLogout} type="button">
+                  <LogOut size={15} />
+                  Sair do sistema
                 </button>
               </div>
             )}
@@ -245,4 +129,5 @@ export const Headerbar: React.FC = () => {
     </header>
   );
 };
+
 export default Headerbar;

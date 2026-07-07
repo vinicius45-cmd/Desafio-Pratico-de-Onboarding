@@ -3,7 +3,7 @@ import { ModuloConfig } from '../types';
 import { withProps } from '../screens/PlaceholderView';
 
 // Lazy load modules/screens to support code splitting
-const DashboardDocs = lazy(() => import('../screens/DashboardDocs'));
+const Dashboard = lazy(() => import('../screens/Dashboard'));
 const OperadoraList = lazy(() => import('../screens/OperadoraList'));
 const ValidadorList = lazy(() => import('../screens/ValidadorList'));
 
@@ -11,12 +11,12 @@ const raw_modulos_sistema: ModuloConfig[] = [
   {
     id: 'dash',
     sigla: 'DASH',
-    nome: 'Painel e Documentos',
-    descricao: 'Documentação viva e painel de desenvolvedor',
+    nome: 'Dashboard',
+    descricao: 'Visão geral dos processos e prazos',
     icone: 'LayoutDashboard',
     cor: '#1e293b',
     rota: 'dashboard',
-    componente: DashboardDocs,
+    componente: Dashboard,
     ativo: true
   },
   {
