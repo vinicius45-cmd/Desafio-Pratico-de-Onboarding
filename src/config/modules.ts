@@ -4,12 +4,18 @@ import { withProps } from '../screens/PlaceholderView';
 
 // Lazy load modules/screens to support code splitting
 const Dashboard = lazy(() => import('../screens/Dashboard'));
-const OperadoraList = lazy(() => import('../screens/OperadoraList'));
-const ValidadorList = lazy(() => import('../screens/ValidadorList'));
+const CadastrodeProcesso = lazy(() => import('../screens/CadastrodeProcesso'));
+
+const PlaceholderProcessos = withProps('Meus Processos', 'Consulta de seus processos em andamento.');
+const PlaceholderPendencias = withProps('Pendências', 'Processos com pendências aguardando ação.');
+const PlaceholderAssinatura = withProps('Para Assinatura', 'Documentos e processos aguardando sua assinatura.');
+const PlaceholderRelatorios = withProps('Relatórios', 'Geração e consulta de relatórios.');
+const PlaceholderAlertas = withProps('Alertas', 'Notificações e alertas do sistema.');
+const PlaceholderAdministracao = withProps('Administração', 'Configurações e gestão do sistema.');
 
 const raw_modulos_sistema: ModuloConfig[] = [
   {
-    id: 'dash',
+    id: 'dashboard',
     sigla: 'DASH',
     nome: 'Dashboard',
     descricao: 'Visão geral dos processos e prazos',
@@ -20,57 +26,81 @@ const raw_modulos_sistema: ModuloConfig[] = [
     ativo: true
   },
   {
-    id: 'suop',
-    sigla: 'SUOP',
-    nome: 'Cadastro de Operadoras',
-    descricao: 'Gestão de operadoras, linhas e frotas',
-    icone: 'Building2',
+    id: 'meus-processos',
+    sigla: 'MPROC',
+    nome: 'Meus Processos',
+    descricao: 'Visualizar seus processos',
+    icone: 'ClipboardList',
     cor: '#0d9488',
-    rota: 'suop',
-    componente: withProps('SUOP - Cadastro de Operadoras', 'Cadastro geral de operadoras, linhas e frotas da SEMOB.'),
-    ativo: true,
-    subMenus: [
-      { id: 'suop-agencies', titulo: 'Operadoras (Ativa)', icone: 'Building2', rota: 'suop-agencies', componente: OperadoraList },
-      { id: 'suop-routes', titulo: 'Linhas (Mock)', icone: 'Route', rota: 'suop-routes', componente: withProps('SUOP - Linhas', 'Consulta e edição de linhas de ônibus.') },
-      { id: 'suop-vehicles', titulo: 'Veículos (Mock)', icone: 'Bus', rota: 'suop-vehicles', componente: withProps('SUOP - Veículos', 'Cadastro de frotas e vistorias de veículos.') },
-    ]
+    rota: 'meus-processos',
+    componente: PlaceholderProcessos,
+    ativo: true
   },
   {
-    id: 'sif',
-    sigla: 'SIF',
-    nome: 'Fiscalização',
-    descricao: 'Sistema de Informações de Fiscalização',
-    icone: 'ShieldCheck',
+    id: 'cadastro-processo',
+    sigla: 'CPROC',
+    nome: 'Cadastro de Processo',
+    descricao: 'Registrar novo processo',
+    icone: 'FilePenLine',
+    cor: '#7c3aed',
+    rota: 'cadastro-processo',
+    componente: CadastrodeProcesso,
+    ativo: true
+  },
+  {
+    id: 'pendencias',
+    sigla: 'PEND',
+    nome: 'Pendências',
+    descricao: 'Processos com pendências',
+    icone: 'FileText',
     cor: '#e11d48',
-    rota: 'sif-menu',
-    componente: withProps('SIF - Fiscalização', 'Controle e emissão de autos de infração e vistorias.'),
-    ativo: true,
-    subMenus: [
-      { id: 'sif-fisc', titulo: 'Auto de Infração', icone: 'FileText', rota: 'sif-fiscalizacao', componente: withProps('SIF - Novo Auto', 'Emissão de auto de infração digital.') },
-      { 
-        id: 'sif-val', 
-        titulo: 'Validadores', 
-        icone: 'CreditCard', 
-        rota: 'sif-valador', 
-        componente: ValidadorList // Alterado de placeholder para a tela real do desafio
-      },
-    ]
+    rota: 'pendencias',
+    componente: PlaceholderPendencias,
+    ativo: true
   },
   {
-    id: 'cdp',
-    sigla: 'CDP',
-    nome: 'Controle de Acesso',
-    descricao: 'Gestão de Sistemas, Módulos e Usuários',
-    icone: 'Shield',
-    cor: '#1e1b4b',
-    rota: 'cdp',
-    componente: withProps('CDP - Controle de Acessos', 'Gestão de permissões de sistemas e usuários.'),
-    ativo: true,
-    subMenus: [
-      { id: 'cdp-sistemas', titulo: 'Sistemas', icone: 'Server', rota: 'cdp-sistemas', componente: withProps('CDP - Sistemas', 'Cadastro de novos sistemas do ecossistema SEMOB.') },
-      { id: 'cdp-usuarios', titulo: 'Usuários', icone: 'Users', rota: 'cdp-usuarios', componente: withProps('CDP - Usuários', 'Associação de usuários com perfis e prepostos.') },
-      { id: 'cdp-grupos', titulo: 'Perfis e Regras', icone: 'Key', rota: 'cdp-grupos', componente: withProps('CDP - Perfis', 'Cadastro de perfis de permissão do sistema.') }
-    ]
+    id: 'para-assinatura',
+    sigla: 'ASSIN',
+    nome: 'Para Assinatura',
+    descricao: 'Aguardando assinatura',
+    icone: 'FileCheck2',
+    cor: '#d97706',
+    rota: 'para-assinatura',
+    componente: PlaceholderAssinatura,
+    ativo: true
+  },
+  {
+    id: 'relatorios',
+    sigla: 'REL',
+    nome: 'Relatórios',
+    descricao: 'Consultar relatórios',
+    icone: 'ClipboardList',
+    cor: '#0891b2',
+    rota: 'relatorios',
+    componente: PlaceholderRelatorios,
+    ativo: true
+  },
+  {
+    id: 'alertas',
+    sigla: 'ALERT',
+    nome: 'Alertas',
+    descricao: 'Notificações e alertas',
+    icone: 'Bell',
+    cor: '#f59e0b',
+    rota: 'alertas',
+    componente: PlaceholderAlertas,
+    ativo: true
+  },
+  {
+    id: 'administracao',
+    sigla: 'ADM',
+    nome: 'Administração',
+    descricao: 'Gestão do sistema',
+    icone: 'Settings',
+    cor: '#6366f1',
+    rota: 'administracao',
+    componente: PlaceholderAdministracao,
+    ativo: true
   }
 ];
 

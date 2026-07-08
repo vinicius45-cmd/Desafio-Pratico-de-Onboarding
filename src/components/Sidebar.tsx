@@ -1,85 +1,62 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Building2,
-  Bus,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  CreditCard,
+  ArrowLeft,
+  Bell,
+  ClipboardList,
+  FileCheck2,
+  FilePenLine,
   FileText,
-  Key,
-  LayoutDashboard,
-  Lock,
+  Home,
   LucideIcon,
-  Route,
-  Server,
-  Shield,
-  ShieldCheck,
-  Terminal,
-  Users,
+  Settings,
   X
 } from 'lucide-react';
-import { useApp } from '../app/AppProvider';
-import { useModules } from '../hooks/useModules';
 
-type IconName =
-  | 'LayoutDashboard'
-  | 'Building2'
-  | 'Shield'
-  | 'ShieldCheck'
-  | 'Server'
-  | 'Users'
-  | 'Key'
-  | 'Route'
-  | 'Bus'
-  | 'FileText'
-  | 'CreditCard'
-  | 'Lock'
-  | 'Terminal';
-
-const iconMap: Record<IconName, LucideIcon> = {
-  LayoutDashboard,
-  Building2,
-  Shield,
-  ShieldCheck,
-  Server,
-  Users,
-  Key,
-  Route,
-  Bus,
-  FileText,
-  CreditCard,
-  Lock,
-  Terminal
+export type MenuItem = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  path: string;
 };
 
-interface IconRendererProps {
-  name?: string;
-  size?: number;
+export interface SidebarProps {
+  items: MenuItem[];
+  currentPath: string;
+  onNavigate: (path: string, item: MenuItem) => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
+  title?: string;
 }
 
-const isIconName = (name: string): name is IconName => name in iconMap;
+export const processSidebarItems: MenuItem[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
+  { id: 'meus-processos', label: 'Meus Processos', icon: ClipboardList, path: '/meus-processos' },
+  { id: 'cadastro-processo', label: 'Cadastro de Processo', icon: FilePenLine, path: '/cadastro-processo' },
+  { id: 'pendencias', label: 'Pendências', icon: FileText, path: '/pendencias' },
+  { id: 'para-assinatura', label: 'Para Assinatura', icon: FileCheck2, path: '/para-assinatura' },
+  { id: 'relatorios', label: 'Relatórios', icon: ClipboardList, path: '/relatorios' },
+  { id: 'alertas', label: 'Alertas', icon: Bell, path: '/alertas' },
+  { id: 'administracao', label: 'Administração', icon: Settings, path: '/administracao' }
+];
 
-const IconRenderer: React.FC<IconRendererProps> = ({ name, size = 19 }) => {
-  const Icon = name && isIconName(name) ? iconMap[name] : Shield;
-  return <Icon aria-hidden="true" size={size} strokeWidth={1.9} />;
-};
+const normalizePath = (path: string): string => (path.startsWith('/') ? path : `/${path}`);
 
-export const Sidebar: React.FC = () => {
-  const { modulos } = useModules();
-  const { activeModuleId, activeSubMenuId, navegarPara, sidebarOpen, toggleSidebar } = useApp();
+export const Sidebar: React.FC<SidebarProps> = ({
+  items,
+  currentPath,
+  onNavigate,
+  isMobileOpen = false,
+  onCloseMobile,
+  title = 'CONTROLE DE PROCESSOS E PRAZOS'
+}) => {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
-  const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({
-    cdp: true,
-    sif: true,
-    suop: true
-  });
 
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
+
       if (mobile) {
         setCollapsed(false);
       }
@@ -89,24 +66,25 @@ export const Sidebar: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const toggleExpand = (moduleId: string) => {
-    setExpandedModules((current) => ({ ...current, [moduleId]: !current[moduleId] }));
-  };
-
   const sidebarClasses = [
     'app-sidebar',
     collapsed ? 'app-sidebar--collapsed' : '',
     isMobile ? 'app-sidebar--mobile' : '',
-    isMobile && sidebarOpen ? 'app-sidebar--open' : ''
+    isMobile && isMobileOpen ? 'app-sidebar--open' : ''
   ].filter(Boolean).join(' ');
+
+  const normalizedCurrentPath = normalizePath(currentPath);
+  const titleLines = title.split(' ');
+  const firstTitleLine = titleLines.slice(0, 2).join(' ');
+  const secondTitleLine = titleLines.slice(2).join(' ');
 
   return (
     <>
-      {isMobile && sidebarOpen && (
+      {isMobile && isMobileOpen && (
         <button
           aria-label="Fechar menu lateral"
           className="app-sidebar__overlay"
-          onClick={toggleSidebar}
+          onClick={onCloseMobile}
           type="button"
         />
       )}
@@ -114,14 +92,13 @@ export const Sidebar: React.FC = () => {
       <aside aria-label="Menu principal" className={sidebarClasses}>
         <header className="app-sidebar__brand">
           <div className="app-sidebar__brand-mark" aria-hidden="true">
-            <FileText size={24} strokeWidth={1.8} />
+            <FileText size={23} strokeWidth={1.8} />
           </div>
 
           {(!collapsed || isMobile) && (
             <div className="app-sidebar__brand-copy">
-              <strong>CONTROLE DE</strong>
-              <strong>PROCESSOS E PRAZOS</strong>
-              <span>Sistema de Gestão</span>
+              <strong>{firstTitleLine}</strong>
+              <strong>{secondTitleLine}</strong>
             </div>
           )}
 
@@ -129,7 +106,7 @@ export const Sidebar: React.FC = () => {
             <button
               aria-label="Fechar menu"
               className="app-sidebar__icon-button"
-              onClick={toggleSidebar}
+              onClick={onCloseMobile}
               type="button"
             >
               <X size={20} />
@@ -138,66 +115,31 @@ export const Sidebar: React.FC = () => {
         </header>
 
         <nav className="app-sidebar__nav">
-          {modulos.map((modulo) => {
-            const hasSubmenus = Boolean(modulo.subMenus?.length);
-            const isExpanded = Boolean(expandedModules[modulo.id]);
-            const isModuleActive = activeModuleId === modulo.id;
+          {items.map((item) => {
+            const Icon = item.icon;
+            const normalizedItemPath = normalizePath(item.path);
+            const isActive = normalizedCurrentPath === normalizedItemPath;
 
             return (
-              <section className="app-sidebar__group" key={modulo.id}>
-                <button
-                  className={[
-                    'app-sidebar__item',
-                    isModuleActive ? 'app-sidebar__item--active' : ''
-                  ].filter(Boolean).join(' ')}
-                  onClick={() => {
-                    if (hasSubmenus) {
-                      toggleExpand(modulo.id);
-                      return;
-                    }
-                    navegarPara(modulo.id, null);
-                  }}
-                  title={collapsed && !isMobile ? modulo.nome : undefined}
-                  type="button"
-                >
-                  <span className="app-sidebar__item-icon">
-                    <IconRenderer name={modulo.icone} />
-                  </span>
-                  {(!collapsed || isMobile) && (
-                    <>
-                      <span className="app-sidebar__item-label">{modulo.nome}</span>
-                      {hasSubmenus && (
-                        <span className="app-sidebar__chevron">
-                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </button>
+              <button
+                aria-current={isActive ? 'page' : undefined}
+                className={[
+                  'app-sidebar__item',
+                  isActive ? 'app-sidebar__item--active' : ''
+                ].filter(Boolean).join(' ')}
+                key={item.id}
+                onClick={() => onNavigate(item.path, item)}
+                title={collapsed && !isMobile ? item.label : undefined}
+                type="button"
+              >
+                <span className="app-sidebar__item-icon">
+                  <Icon aria-hidden="true" size={18} strokeWidth={1.9} />
+                </span>
 
-                {hasSubmenus && isExpanded && (!collapsed || isMobile) && (
-                  <div className="app-sidebar__submenu">
-                    {modulo.subMenus?.map((submenu) => {
-                      const isSubmenuActive = activeSubMenuId === submenu.id;
-
-                      return (
-                        <button
-                          className={[
-                            'app-sidebar__submenu-item',
-                            isSubmenuActive ? 'app-sidebar__submenu-item--active' : ''
-                          ].filter(Boolean).join(' ')}
-                          key={submenu.id}
-                          onClick={() => navegarPara(modulo.id, submenu.id)}
-                          type="button"
-                        >
-                          <IconRenderer name={submenu.icone} size={15} />
-                          <span>{submenu.titulo}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                {(!collapsed || isMobile) && (
+                  <span className="app-sidebar__item-label">{item.label}</span>
                 )}
-              </section>
+              </button>
             );
           })}
         </nav>
@@ -209,7 +151,8 @@ export const Sidebar: React.FC = () => {
             onClick={() => setCollapsed((current) => !current)}
             type="button"
           >
-            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            <ArrowLeft aria-hidden="true" size={17} strokeWidth={2} />
+            {!collapsed && <span>Recolher menu</span>}
           </button>
         )}
       </aside>

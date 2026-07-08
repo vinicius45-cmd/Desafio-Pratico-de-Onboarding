@@ -24,6 +24,30 @@ export interface Usuario {
   permissoesServicos: Record<string, 'LEITURA' | 'ESCRITA'>;
 }
 
+export interface FormCadastro {
+  processoINCRA: string;
+  requerimento: string;
+  assunto: string;
+  solicitudesInformacao: string[];
+  orgaoOrigem: string;
+  dataEntrada: string;
+  prazoAreaTecnica: string;
+  prazoFinal: string;
+  situacaoProcesso: string;
+  responsavel: string;
+  documentoSEI: string;
+  especial: boolean;
+  observacao: string;
+}
+
+export interface ResumoProcesso {
+  status: string;
+  diasRestantes: number;
+  prazoFinal: string;
+  situacao: string;
+  responsavel: string;
+}
+
 export type AppViewComponent = ComponentType<Record<string, never>>;
 
 export interface SubMenuModulo {

@@ -3,12 +3,62 @@ import AppProvider, { useApp } from './app/AppProvider';
 import { Button } from './components/Button';
 import { ContentArea } from './components/ContentArea';
 import { Headerbar } from './components/Headerbar';
-import { Sidebar } from './components/Sidebar';
+import { MenuItem, Sidebar } from './components/Sidebar';
 import { useAuth } from './hooks/useAuth';
 import { useModules } from './hooks/useModules';
 import { useSemAcesso } from './hooks/useSemAcesso';
 import { LoginScreen } from './screens/LoginScreen';
-import { ShieldAlert } from 'lucide-react';
+import {
+  Building2,
+  Bus,
+  CreditCard,
+  FileText,
+  FilePenLine,
+  Key,
+  LayoutDashboard,
+  Lock,
+  LucideIcon,
+  Route,
+  Server,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Terminal,
+  Users,
+  ClipboardList,
+  FileCheck2,
+  Bell,
+  Settings
+} from 'lucide-react';
+
+const sidebarIconMap = {
+  LayoutDashboard,
+  Building2,
+  Shield,
+  ShieldCheck,
+  Server,
+  Users,
+  Key,
+  Route,
+  Bus,
+  FileText,
+  FilePenLine,
+  CreditCard,
+  Lock,
+  Terminal,
+  ClipboardList,
+  FileCheck2,
+  Bell,
+  Settings
+} satisfies Record<string, LucideIcon>;
+
+const getSidebarIcon = (iconName?: string): LucideIcon => {
+  if (iconName && iconName in sidebarIconMap) {
+    return sidebarIconMap[iconName as keyof typeof sidebarIconMap];
+  }
+
+  return Shield;
+};
 
 const LoadingSpinner: React.FC = () => (
   <div className="app-loading">
@@ -44,15 +94,61 @@ const LockScreen: React.FC = () => {
 
 const MainLayoutShell: React.FC = () => {
   const { modulos } = useModules();
-  const { activeModuleId, activeSubMenuId } = useApp();
+  const {
+    activeModuleId,
+    activeSubMenuId,
+    navegarPara,
+    sidebarOpen,
+    toggleSidebar
+  } = useApp();
 
   const activeModule = modulos.find((module) => module.id === activeModuleId);
   const activeSubmenu = activeModule?.subMenus?.find((submenu) => submenu.id === activeSubMenuId);
   const ViewComponent = activeSubmenu ? activeSubmenu.componente : activeModule?.componente ?? null;
+  const currentPath = activeSubmenu?.rota ?? activeModule?.rota ?? 'dashboard';
+  const sidebarItems: MenuItem[] = modulos.flatMap((module) => {
+    if (module.subMenus?.length) {
+      return module.subMenus.map((submenu) => ({
+        id: submenu.id,
+        label: submenu.titulo,
+        icon: getSidebarIcon(submenu.icone),
+        path: submenu.rota ?? module.rota
+      }));
+    }
+
+    return [{
+      id: module.id,
+      label: module.nome,
+      icon: getSidebarIcon(module.icone),
+      path: module.rota
+    }];
+  });
+
+  const handleSidebarNavigate = (path: string) => {
+    const moduleMatch = modulos.find((module) => module.rota === path);
+    if (moduleMatch) {
+      navegarPara(moduleMatch.id, null);
+      return;
+    }
+
+    for (const module of modulos) {
+      const submenuMatch = module.subMenus?.find((submenu) => submenu.rota === path);
+      if (submenuMatch) {
+        navegarPara(module.id, submenuMatch.id);
+        return;
+      }
+    }
+  };
 
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar
+        currentPath={currentPath}
+        isMobileOpen={sidebarOpen}
+        items={sidebarItems}
+        onCloseMobile={toggleSidebar}
+        onNavigate={handleSidebarNavigate}
+      />
 
       <div className="app-shell__workspace">
         <Headerbar />
