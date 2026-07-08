@@ -1,5 +1,7 @@
 import { lazy } from 'react';
 import { ModuloConfig } from '../types';
+import DetalhesProcesso from '../screens/DetalhesProcesso';
+import Relatorios from '../screens/Relatorios';
 import { withProps } from '../screens/PlaceholderView';
 
 // Lazy load modules/screens to support code splitting
@@ -7,9 +9,7 @@ const Dashboard = lazy(() => import('../screens/Dashboard'));
 const CadastrodeProcesso = lazy(() => import('../screens/CadastrodeProcesso'));
 const Pendencias = lazy(() => import('../screens/Pendencias'));
 
-const PlaceholderProcessos = withProps('Meus Processos', 'Consulta de seus processos em andamento.');
 const PlaceholderAssinatura = withProps('Para Assinatura', 'Documentos e processos aguardando sua assinatura.');
-const PlaceholderRelatorios = withProps('Relatórios', 'Geração e consulta de relatórios.');
 const PlaceholderAlertas = withProps('Alertas', 'Notificações e alertas do sistema.');
 const PlaceholderAdministracao = withProps('Administração', 'Configurações e gestão do sistema.');
 
@@ -33,7 +33,7 @@ const raw_modulos_sistema: ModuloConfig[] = [
     icone: 'ClipboardList',
     cor: '#0d9488',
     rota: 'meus-processos',
-    componente: PlaceholderProcessos,
+    componente: DetalhesProcesso,
     ativo: true
   },
   {
@@ -77,7 +77,7 @@ const raw_modulos_sistema: ModuloConfig[] = [
     icone: 'ClipboardList',
     cor: '#0891b2',
     rota: 'relatorios',
-    componente: PlaceholderRelatorios,
+    componente: Relatorios,
     ativo: true
   },
   {
