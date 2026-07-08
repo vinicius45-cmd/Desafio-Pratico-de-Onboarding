@@ -48,6 +48,17 @@ export interface ResumoProcesso {
   responsavel: string;
 }
 
+export interface CardPendencia {
+  id: string;
+  processoId: string;
+  titulo: string;
+  setor: string;
+  diasRestantes: number;
+  status: 'atrasado' | 'vence_hoje' | 'proximos_5_dias' | 'para_assinatura' | 'especiais';
+}
+
+export type PendenciasKanban = Record<string, CardPendencia[]>;
+
 export type AppViewComponent = ComponentType<Record<string, never>>;
 
 export interface SubMenuModulo {

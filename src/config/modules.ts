@@ -5,9 +5,9 @@ import { withProps } from '../screens/PlaceholderView';
 // Lazy load modules/screens to support code splitting
 const Dashboard = lazy(() => import('../screens/Dashboard'));
 const CadastrodeProcesso = lazy(() => import('../screens/CadastrodeProcesso'));
+const Pendencias = lazy(() => import('../screens/Pendencias'));
 
 const PlaceholderProcessos = withProps('Meus Processos', 'Consulta de seus processos em andamento.');
-const PlaceholderPendencias = withProps('Pendências', 'Processos com pendências aguardando ação.');
 const PlaceholderAssinatura = withProps('Para Assinatura', 'Documentos e processos aguardando sua assinatura.');
 const PlaceholderRelatorios = withProps('Relatórios', 'Geração e consulta de relatórios.');
 const PlaceholderAlertas = withProps('Alertas', 'Notificações e alertas do sistema.');
@@ -55,7 +55,7 @@ const raw_modulos_sistema: ModuloConfig[] = [
     icone: 'FileText',
     cor: '#e11d48',
     rota: 'pendencias',
-    componente: PlaceholderPendencias,
+    componente: Pendencias,
     ativo: true
   },
   {
