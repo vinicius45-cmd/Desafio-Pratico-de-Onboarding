@@ -1,6 +1,9 @@
 import { lazy } from 'react';
 import { ModuloConfig } from '../types';
+import Alertas from '../screens/Alertas';
+import Administracao from '../screens/Administracao';
 import DetalhesProcesso from '../screens/DetalhesProcesso';
+import ParaAssinatura from '../screens/ParaAssinatura';
 import Relatorios from '../screens/Relatorios';
 import { withProps } from '../screens/PlaceholderView';
 
@@ -8,10 +11,6 @@ import { withProps } from '../screens/PlaceholderView';
 const Dashboard = lazy(() => import('../screens/Dashboard'));
 const CadastrodeProcesso = lazy(() => import('../screens/CadastrodeProcesso'));
 const Pendencias = lazy(() => import('../screens/Pendencias'));
-
-const PlaceholderAssinatura = withProps('Para Assinatura', 'Documentos e processos aguardando sua assinatura.');
-const PlaceholderAlertas = withProps('Alertas', 'Notificações e alertas do sistema.');
-const PlaceholderAdministracao = withProps('Administração', 'Configurações e gestão do sistema.');
 
 const raw_modulos_sistema: ModuloConfig[] = [
   {
@@ -66,7 +65,7 @@ const raw_modulos_sistema: ModuloConfig[] = [
     icone: 'FileCheck2',
     cor: '#d97706',
     rota: 'para-assinatura',
-    componente: PlaceholderAssinatura,
+    componente: ParaAssinatura,
     ativo: true
   },
   {
@@ -88,7 +87,7 @@ const raw_modulos_sistema: ModuloConfig[] = [
     icone: 'Bell',
     cor: '#f59e0b',
     rota: 'alertas',
-    componente: PlaceholderAlertas,
+    componente: Alertas,
     ativo: true
   },
   {
@@ -99,7 +98,7 @@ const raw_modulos_sistema: ModuloConfig[] = [
     icone: 'Settings',
     cor: '#6366f1',
     rota: 'administracao',
-    componente: PlaceholderAdministracao,
+    componente: Administracao,
     ativo: true
   }
 ];
