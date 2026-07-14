@@ -12,7 +12,13 @@ Pré-requisitos
 
 Como aplicar
 -----------
-1. Revise e substitua nomes de `TABLESPACE`/`OWNER` conforme sua política (não há tablespace hard-coded no script; ajuste se necessário).
+1. Defina os placeholders de owner/tablespace antes de executar o script:
+
+```sql
+DEFINE APP_OWNER = 'APP_OWNER';
+DEFINE DATA_TS = 'EXADATA_TS';
+```
+
 2. Execute o script em um ambiente de staging antes de produção:
 
 ```sql
@@ -20,7 +26,13 @@ Como aplicar
 @exadata_model.sql
 ```
 
-3. Para conversão de partições antigas para HCC (exemplo):
+3. Valide planos de execução e compressão com:
+
+```sql
+@exadata_validation.sql
+```
+
+4. Para conversão de partições antigas para HCC (exemplo):
 
 ```sql
 ALTER TABLE processos MOVE PARTITION p_2021 COMPRESS FOR QUERY HIGH;
