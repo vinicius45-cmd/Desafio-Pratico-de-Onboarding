@@ -25,9 +25,12 @@ export interface Usuario {
 }
 
 export interface FormCadastro {
+  id?: string;
   processoINCRA: string;
   requerimento: string;
   assunto: string;
+  assuntoTipo: string;
+  destinatario: string;
   solicitudesInformacao: string[];
   orgaoOrigem: string;
   dataEntrada: string;
@@ -37,12 +40,15 @@ export interface FormCadastro {
   responsavel: string;
   documentoSEI: string;
   especial: boolean;
+  filtroRespostas: boolean;
   observacao: string;
 }
 
 export interface ResumoProcesso {
   status: string;
   diasRestantes: number;
+  textoDias?: string | number;
+  corDias?: string;
   prazoFinal: string;
   situacao: string;
   responsavel: string;

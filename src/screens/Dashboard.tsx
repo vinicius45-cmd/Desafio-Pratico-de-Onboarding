@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ClipboardList,
   Droplet,
@@ -10,6 +10,7 @@ import {
   Puzzle,
   TimerReset
 } from 'lucide-react';
+import { FormCadastro } from '../types';
 
 type Criticidade =
   | 'Atrasado'
@@ -200,7 +201,77 @@ const getSituacaoVariant = (situacao: SituacaoProcesso): string => {
   return variants[situacao];
 };
 
+// Calcula dias restantes baseado nas datas
+const calcularDiasRestantes = (prazoFinal: string): number => {
+  if (!prazoFinal) return 0;
+
+  const prazo = new Date(prazoFinal);
+  const hoje = new Date();
+
+  // Limpa horário para comparação apenas de datas
+  prazo.setHours(0, 0, 0, 0);
+  hoje.setHours(0, 0, 0, 0);
+
+  // Calcula diferença em milissegundos e converte para dias
+  const diferenca = prazo.getTime() - hoje.getTime();
+  const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
+
+  return dias;
+};
+
+// Converte FormCadastro para Processo
+const converterParaProcesso = (form: FormCadastro, index: number): Processo => {
+  const diasRestantes = calcularDiasRestantes(form.prazoFinal);
+  let criticidade: Criticidade = 'OK';
+  let diasTexto = `${diasRestantes} dias`;
+
+  if (diasRestantes < 0) {
+    criticidade = 'Atrasado';
+    diasTexto = `${diasRestantes} dias`;
+  } else if (diasRestantes === 0) {
+    criticidade = 'Vence Hoje';
+    diasTexto = 'Hoje';
+  } else if (diasRestantes <= 5) {
+    criticidade = 'Próximo do prazo';
+  } else if (form.especial) {
+    criticidade = 'Especial';
+  }
+
+  return {
+    id: parseInt(form.id || index.toString(), 10),
+    criticidade,
+    numeroSei: form.processoINCRA || form.requerimento || 'N/A',
+    assunto: form.assunto,
+    orgao: form.orgaoOrigem,
+    responsavel: form.responsavel || 'Não atribuído',
+    prazoFinal: form.prazoFinal ? new Date(form.prazoFinal).toLocaleDateString('pt-BR') : '',
+    diasRestantes: diasTexto,
+    situacao: (form.situacaoProcesso === 'em-andamento' ? 'Em andamento' : 'Em andamento') as SituacaoProcesso
+  };
+};
+
 export const Dashboard: React.FC = () => {
+  const [processosExibicao, setProcessosExibicao] = useState<Processo[]>([]);
+
+  useEffect(() => {
+    // Carrega processos do localStorage
+    const procesosArmazenados = localStorage.getItem('processos_cadastrados');
+    if (procesosArmazenados) {
+      try {
+        const procesos: FormCadastro[] = JSON.parse(procesosArmazenados);
+        const processosConvertidos = procesos.map((form, index) => 
+          converterParaProcesso(form, index)
+        );
+        // Combina com os dados mockados
+        setProcessosExibicao([...processos, ...processosConvertidos]);
+      } catch (erro) {
+        console.error('Erro ao carregar processos:', erro);
+        setProcessosExibicao(processos);
+      }
+    } else {
+      setProcessosExibicao(processos);
+    }
+  }, []);
   return (
     <section className="dashboard-page" aria-label="Dashboard">
       <div className="dashboard-summary">
@@ -244,7 +315,7 @@ export const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {processos.map((processo) => (
+              {processosExibicao.map((processo) => (
                 <tr key={processo.id}>
                   <td>
                     <span className={`dashboard-badge dashboard-badge--${getCriticidadeVariant(processo.criticidade)}`}>

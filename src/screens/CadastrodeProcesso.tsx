@@ -1,12 +1,33 @@
-import React, { ChangeEvent, FormEvent, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useState, useEffect } from 'react';
 import { FormCadastro, ResumoProcesso } from '../types';
 import '../styles/CadastrodeProcesso.css';
 
 const CadastrodeProcesso: React.FC = () => {
+  // Constantes para opções dos SELECTs
+  const TIPOS_ASSUNTO = [
+    'Ofício',
+    'Requerimento',
+    'Carta',
+    'Indicação',
+    'Despacho',
+    'Memorando',
+  ];
+
+  const SETORES_UNIDADES = [
+    'Suop',
+    'Suter',
+    'Sufisa',
+    'Suag',
+    'Sutinf',
+  ];
+
+  // Estados do formulário
   const [form, setForm] = useState<FormCadastro>({
     processoINCRA: '',
     requerimento: '',
     assunto: '',
+    assuntoTipo: '',
+    destinatario: '',
     solicitudesInformacao: [],
     orgaoOrigem: '',
     dataEntrada: '',
@@ -16,18 +37,153 @@ const CadastrodeProcesso: React.FC = () => {
     responsavel: '',
     documentoSEI: '',
     especial: false,
+    filtroRespostas: false,
     observacao: '',
   });
 
-  const [resumo] = useState<ResumoProcesso>({
+  const [resumo, setResumo] = useState<ResumoProcesso>({
     status: 'OK',
-    diasRestantes: 21,
-    prazoFinal: '05/06/2024',
-    situacao: 'Em andamento',
-    responsavel: 'João da Silva',
+    diasRestantes: 0,
+    textoDias: 0,
+    corDias: '#169770',
+    prazoFinal: '',
+    situacao: '',
+    responsavel: '',
   });
 
   const [solicitudePendente, setSolicitudePendente] = useState<string>('');
+  const [processosSalvos, setProcessosSalvos] = useState<FormCadastro[]>([]);
+  const [mostrarListaProcessos, setMostrarListaProcessos] = useState(false);
+  const [busca, setBusca] = useState<string>('');
+  const [processosFiltrados, setProcessosFiltrados] = useState<FormCadastro[]>([]);
+  const [mostrarResumo, setMostrarResumo] = useState(true);
+
+  // Calcula dias restantes baseado nas datas
+  const calcularDiasRestantes = (dataEntrada: string, prazoFinal: string): number => {
+    if (!dataEntrada || !prazoFinal) return 0;
+
+    const prazo = new Date(prazoFinal);
+    const hoje = new Date();
+
+    // Limpa horário para comparação apenas de datas
+    prazo.setHours(0, 0, 0, 0);
+    hoje.setHours(0, 0, 0, 0);
+
+    // Calcula diferença em milissegundos e converte para dias
+    const diferenca = prazo.getTime() - hoje.getTime();
+    const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
+
+    return dias;
+  };
+
+  // Obtém a cor baseada na quantidade de dias
+  const obterCorDias = (dias: number): string => {
+    if (dias === 0) return '#1007414'; // Verde para hoje
+    if (dias < 0) return '#ec4444'; // Vermelho para vencido
+    if (dias <= 5) return '#fcbc24'; // Amarelo para até 5 dias
+    return '#169770'; // Verde para mais de 5 dias
+  };
+
+  // Obtém o texto de exibição dos dias
+  const obterTextoDias = (dias: number): string | number => {
+    if (dias === 0) return 'Hoje';
+    return dias;
+  };
+
+  // Mapeia o valor da situação para exibição
+  const mapearSituacao = (situacao: string): string => {
+    const mapa: Record<string, string> = {
+      'em-andamento': 'Em andamento',
+      'concluido': 'Concluído',
+      'parado': 'Parado',
+    };
+    return mapa[situacao] || situacao;
+  };
+
+  // Mapeia o valor do responsável para exibição
+  const mapearResponsavel = (responsavel: string): string => {
+    const mapa: Record<string, string> = {
+      'joao-silva': 'João da Silva',
+      'maria-santos': 'Maria dos Santos',
+      'pedro-oliveira': 'Pedro Oliveira',
+    };
+    return mapa[responsavel] || responsavel;
+  };
+
+  // Atualiza o resumo quando os campos relevantes mudam
+  useEffect(() => {
+    const diasRestantes = calcularDiasRestantes(form.dataEntrada, form.prazoFinal);
+    const situacaoExibicao = mapearSituacao(form.situacaoProcesso);
+    const responsavelExibicao = mapearResponsavel(form.responsavel);
+    const corDias = obterCorDias(diasRestantes);
+    const textoDias = obterTextoDias(diasRestantes);
+
+    // Só atualiza se houver alteração significativa
+    if (
+      form.dataEntrada ||
+      form.prazoFinal ||
+      form.situacaoProcesso ||
+      form.responsavel
+    ) {
+      setResumo((prev) => ({
+        ...prev,
+        diasRestantes,
+        textoDias,
+        corDias,
+        prazoFinal: form.prazoFinal ? new Date(form.prazoFinal).toLocaleDateString('pt-BR') : '',
+        situacao: situacaoExibicao,
+        responsavel: responsavelExibicao,
+      }));
+    }
+
+    // Mostra o resumo novamente se os dados foram modificados
+    setMostrarResumo(true);
+  }, [form.dataEntrada, form.prazoFinal, form.situacaoProcesso, form.responsavel]);
+  useEffect(() => {
+    carregarProcessosSalvos();
+  }, []);
+
+  // Filtra processos quando há alteração na busca ou no filtro de respostas
+  useEffect(() => {
+    const filtrados = processosSalvos.filter((processo) => {
+      const correspondeBusca =
+        !busca ||
+        processo.processoINCRA.toLowerCase().includes(busca.toLowerCase()) ||
+        processo.requerimento.toLowerCase().includes(busca.toLowerCase()) ||
+        processo.assunto.toLowerCase().includes(busca.toLowerCase());
+
+      const correspondeFiltroBusca = !form.filtroRespostas || processo.filtroRespostas;
+
+      return correspondeBusca && correspondeFiltroBusca;
+    });
+
+    setProcessosFiltrados(filtrados);
+  }, [busca, processosSalvos, form.filtroRespostas]);
+
+  // Salva processos no localStorage (simula arquivo .txt)
+  const salvarProcessoNoStorage = (processo: FormCadastro): void => {
+    const id = processo.id || Date.now().toString();
+    const processoComId = { ...processo, id };
+
+    const processos = processosSalvos.filter((p) => p.id !== id);
+    processos.push(processoComId);
+
+    localStorage.setItem('processos_cadastrados', JSON.stringify(processos));
+    setProcessosSalvos(processos);
+  };
+
+  // Carrega processos do localStorage
+  const carregarProcessosSalvos = (): void => {
+    const procesosArmazenados = localStorage.getItem('processos_cadastrados');
+    if (procesosArmazenados) {
+      try {
+        const procesos = JSON.parse(procesosArmazenados);
+        setProcessosSalvos(procesos);
+      } catch (erro) {
+        console.error('Erro ao carregar processos:', erro);
+      }
+    }
+  };
 
   // Manipuladores de evento estritamente tipados
   const handleInputChange = (
@@ -35,7 +191,7 @@ const CadastrodeProcesso: React.FC = () => {
   ): void => {
     const target = e.currentTarget;
     const { name, value, type } = target;
-    
+
     if (type === 'checkbox' && target instanceof HTMLInputElement) {
       setForm((prev) => ({
         ...prev,
@@ -73,8 +229,24 @@ const CadastrodeProcesso: React.FC = () => {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    console.log('Formulário submetido:', form);
-    console.log('Resumo:', resumo);
+
+    // Valida os campos obrigatórios
+    if (
+      !form.assuntoTipo ||
+      !form.destinatario ||
+      !form.dataEntrada ||
+      !form.prazoFinal
+    ) {
+      alert('Por favor, preencha todos os campos obrigatórios!');
+      return;
+    }
+
+    // Salva o processo
+    salvarProcessoNoStorage(form);
+    alert('Processo cadastrado com sucesso!');
+
+    // Limpa o formulário
+    handleCancel();
   };
 
   const handleCancel = (): void => {
@@ -82,6 +254,8 @@ const CadastrodeProcesso: React.FC = () => {
       processoINCRA: '',
       requerimento: '',
       assunto: '',
+      assuntoTipo: '',
+      destinatario: '',
       solicitudesInformacao: [],
       orgaoOrigem: '',
       dataEntrada: '',
@@ -91,8 +265,23 @@ const CadastrodeProcesso: React.FC = () => {
       responsavel: '',
       documentoSEI: '',
       especial: false,
+      filtroRespostas: false,
       observacao: '',
     });
+    setBusca('');
+  };
+
+  const carregarProcesso = (processo: FormCadastro): void => {
+    setForm(processo);
+    setMostrarListaProcessos(false);
+  };
+
+  const deletarProcesso = (id: string | undefined): void => {
+    if (!id) return;
+    const processos = processosSalvos.filter((p) => p.id !== id);
+    localStorage.setItem('processos_cadastrados', JSON.stringify(processos));
+    setProcessosSalvos(processos);
+    alert('Processo deletado com sucesso!');
   };
 
   return (
@@ -108,6 +297,80 @@ const CadastrodeProcesso: React.FC = () => {
       <div className="cadastro-content">
         {/* Coluna Esquerda - Formulário */}
         <div className="formulario-column">
+          {/* Seção de Pesquisa e Lista de Processos */}
+          <div className="processos-salvos-section">
+            <button
+              type="button"
+              onClick={() => setMostrarListaProcessos(!mostrarListaProcessos)}
+              className="btn btn-secondary"
+            >
+              {mostrarListaProcessos
+                ? 'Fechar Lista de Processos'
+                : 'Ver Processos Salvos'}
+            </button>
+
+            {mostrarListaProcessos && (
+              <div className="processos-lista-container">
+                <div className="processos-pesquisa">
+                  <input
+                    type="text"
+                    placeholder="Pesquisar por Processo, Requerimento ou Assunto..."
+                    value={busca}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setBusca(e.target.value)
+                    }
+                    className="input-pesquisa"
+                  />
+                </div>
+
+                <div className="processos-lista">
+                  {processosFiltrados.length > 0 ? (
+                    processosFiltrados.map((processo) => (
+                      <div key={processo.id} className="processo-item">
+                        <div className="processo-info">
+                          <p className="processo-numero">
+                            <strong>Processo:</strong> {processo.processoINCRA || 'N/A'}
+                          </p>
+                          <p className="processo-assunto">
+                            <strong>Assunto:</strong> {processo.assunto}
+                          </p>
+                          <p className="processo-tipo">
+                            <strong>Tipo:</strong> {processo.assuntoTipo}
+                          </p>
+                          <p className="processo-destinatario">
+                            <strong>Destinatário:</strong> {processo.destinatario}
+                          </p>
+                        </div>
+                        <div className="processo-acoes">
+                          <button
+                            type="button"
+                            onClick={() => carregarProcesso(processo)}
+                            className="btn btn-primary btn-small"
+                          >
+                            Carregar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => deletarProcesso(processo.id)}
+                            className="btn btn-danger btn-small"
+                          >
+                            Deletar
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="no-results">
+                      {busca
+                        ? 'Nenhum processo encontrado'
+                        : 'Nenhum processo cadastrado'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           <form onSubmit={handleSubmit} className="formulario">
             {/* Seção: Dados do Processo */}
             <section className="form-section">
@@ -149,8 +412,51 @@ const CadastrodeProcesso: React.FC = () => {
                   name="assunto"
                   value={form.assunto}
                   onChange={handleInputChange}
+                  placeholder="Descrição do assunto"
                   required
                 />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="assuntoTipo">
+                  Tipo de Documento (Assunto){' '}
+                  <span className="required-asterisk">*</span>
+                </label>
+                <select
+                  id="assuntoTipo"
+                  name="assuntoTipo"
+                  value={form.assuntoTipo}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Selecione um tipo de documento</option>
+                  {TIPOS_ASSUNTO.map((tipo) => (
+                    <option key={tipo} value={tipo}>
+                      {tipo}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="destinatario">
+                  Destinatário (Setor/Unidade){' '}
+                  <span className="required-asterisk">*</span>
+                </label>
+                <select
+                  id="destinatario"
+                  name="destinatario"
+                  value={form.destinatario}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">Selecione um setor/unidade</option>
+                  {SETORES_UNIDADES.map((setor) => (
+                    <option key={setor} value={setor}>
+                      {setor}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">
@@ -337,6 +643,19 @@ const CadastrodeProcesso: React.FC = () => {
                   Especial
                 </label>
               </div>
+
+              <div className="form-group checkbox-group">
+                <input
+                  type="checkbox"
+                  id="filtroRespostas"
+                  name="filtroRespostas"
+                  checked={form.filtroRespostas}
+                  onChange={handleInputChange}
+                />
+                <label htmlFor="filtroRespostas" className="checkbox-label">
+                  Somente unidades que responderam
+                </label>
+              </div>
             </section>
 
             {/* Seção: Observação */}
@@ -371,14 +690,23 @@ const CadastrodeProcesso: React.FC = () => {
         </div>
 
         {/* Coluna Direita - Resumo */}
+        {mostrarResumo && (
         <div className="resumo-column">
           <div className="resumo-card">
             <div className="resumo-header">
-              <button className="btn-status">{resumo.status}</button>
+              <button 
+                className="btn-status" 
+                onClick={() => setMostrarResumo(false)}
+                title="Clique para esconder o resumo"
+              >
+                {resumo.status}
+              </button>
             </div>
 
             <div className="resumo-dias">
-              <span className="dias-number">{resumo.diasRestantes}</span>
+              <span className="dias-number" style={{ color: resumo.corDias }}>
+                {resumo.textoDias}
+              </span>
               <span className="dias-text">dias restantes</span>
             </div>
 
@@ -411,6 +739,7 @@ const CadastrodeProcesso: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
