@@ -45,7 +45,7 @@ const CadastrodeProcesso: React.FC = () => {
     status: 'OK',
     diasRestantes: 0,
     textoDias: 0,
-    corDias: '#169770',
+    corDias: '#1c79d4',
     prazoFinal: '',
     situacao: '',
     responsavel: '',
@@ -59,17 +59,27 @@ const CadastrodeProcesso: React.FC = () => {
   const [mostrarResumo, setMostrarResumo] = useState(true);
 
   // Calcula dias restantes baseado nas datas
+  const parseDateLocal = (dateStr: string): Date => {
+    // `input[type=date]` fornece strings no formato YYYY-MM-DD.
+    // `new Date('YYYY-MM-DD')` é tratado como UTC e causa off-by-one
+    // em fusos horários negativos. Aqui criamos uma Date local.
+    const parts = dateStr.split('-');
+    const year = Number(parts[0]);
+    const month = Number(parts[1]) - 1;
+    const day = Number(parts[2]);
+    return new Date(year, month, day);
+  };
+
   const calcularDiasRestantes = (dataEntrada: string, prazoFinal: string): number => {
     if (!dataEntrada || !prazoFinal) return 0;
 
-    const prazo = new Date(prazoFinal);
+    const prazo = parseDateLocal(prazoFinal);
     const hoje = new Date();
 
-    // Limpa horário para comparação apenas de datas
+    // Zera horas para comparar apenas a parte da data (local)
     prazo.setHours(0, 0, 0, 0);
     hoje.setHours(0, 0, 0, 0);
 
-    // Calcula diferença em milissegundos e converte para dias
     const diferenca = prazo.getTime() - hoje.getTime();
     const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
 
@@ -78,8 +88,8 @@ const CadastrodeProcesso: React.FC = () => {
 
   // Obtém a cor baseada na quantidade de dias
   const obterCorDias = (dias: number): string => {
-    if (dias === 0) return '#1007414'; // Verde para hoje
-    if (dias < 0) return '#ec4444'; // Vermelho para vencido
+    if (dias === 0) return '#ff5c00'; // Laranja para hoje
+    if (dias < 0) return '#ff0000'; // Vermelho para vencido
     if (dias <= 5) return '#fcbc24'; // Amarelo para até 5 dias
     return '#169770'; // Verde para mais de 5 dias
   };
@@ -112,11 +122,19 @@ const CadastrodeProcesso: React.FC = () => {
 
   // Atualiza o resumo quando os campos relevantes mudam
   useEffect(() => {
-    const diasRestantes = calcularDiasRestantes(form.dataEntrada, form.prazoFinal);
+    const hasDates = Boolean(form.dataEntrada && form.prazoFinal);
     const situacaoExibicao = mapearSituacao(form.situacaoProcesso);
     const responsavelExibicao = mapearResponsavel(form.responsavel);
-    const corDias = obterCorDias(diasRestantes);
-    const textoDias = obterTextoDias(diasRestantes);
+
+    let diasRestantes = 0;
+    let corDias = '#1c79d4';
+    let textoDias: string | number = 0;
+
+    if (hasDates) {
+      diasRestantes = calcularDiasRestantes(form.dataEntrada, form.prazoFinal);
+      corDias = obterCorDias(diasRestantes);
+      textoDias = obterTextoDias(diasRestantes);
+    }
 
     // Só atualiza se houver alteração significativa
     if (
