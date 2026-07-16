@@ -148,7 +148,7 @@ const CadastrodeProcesso: React.FC = () => {
         diasRestantes,
         textoDias,
         corDias,
-        prazoFinal: form.prazoFinal ? new Date(form.prazoFinal).toLocaleDateString('pt-BR') : '',
+        prazoFinal: form.prazoFinal ? parseDateLocal(form.prazoFinal).toLocaleDateString('pt-BR') : '',
         situacao: situacaoExibicao,
         responsavel: responsavelExibicao,
       }));

@@ -222,25 +222,70 @@ const getProcessosFiltrados = (processos: Processo[], filtroAtivo: string | null
   return processos.filter((processo) => criteriosList.includes(processo.criticidade));
 };
 
-// Calcula dias restantes baseado nas datas
+const parseDateString = (dateStr: string): Date | null => {
+  if (!dateStr) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+    const [day, month, year] = dateStr.split('/').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  const fallback = new Date(dateStr);
+  return Number.isNaN(fallback.getTime()) ? null : fallback;
+};
+
+const formatarPrazoFinal = (dateStr: string): string => {
+  const data = parseDateString(dateStr);
+  return data ? data.toLocaleDateString('pt-BR') : '';
+};
+
 const calcularDiasRestantes = (prazoFinal: string): number => {
   if (!prazoFinal) return 0;
 
-  const prazo = new Date(prazoFinal);
+  const prazo = parseDateString(prazoFinal);
+  if (!prazo) return 0;
+
   const hoje = new Date();
 
-  // Limpa horário para comparação apenas de datas
   prazo.setHours(0, 0, 0, 0);
   hoje.setHours(0, 0, 0, 0);
 
-  // Calcula diferença em milissegundos e converte para dias
   const diferenca = prazo.getTime() - hoje.getTime();
   const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
 
   return dias;
 };
 
-// Converte FormCadastro para Processo
+const recalcularProcesso = (processo: Processo): Processo => {
+  const prazoValido = parseDateString(processo.prazoFinal);
+  const prazoFormatado = prazoValido ? prazoValido.toLocaleDateString('pt-BR') : processo.prazoFinal;
+  const diasRestantesValor = prazoValido ? calcularDiasRestantes(processo.prazoFinal) : 0;
+  let criticidade: Criticidade = 'OK';
+  let diasTexto = `${diasRestantesValor} dias`;
+
+  if (diasRestantesValor < 0) {
+    criticidade = 'Atrasado';
+    diasTexto = `${diasRestantesValor} dias`;
+  } else if (diasRestantesValor === 0) {
+    criticidade = 'Vence Hoje';
+    diasTexto = 'Hoje';
+  } else if (diasRestantesValor <= 5) {
+    criticidade = 'Próximo do prazo';
+  }
+
+  return {
+    ...processo,
+    prazoFinal: prazoFormatado,
+    diasRestantes: diasTexto,
+    criticidade
+  };
+};
+
 const converterParaProcesso = (form: FormCadastro, index: number): Processo => {
   const diasRestantes = calcularDiasRestantes(form.prazoFinal);
   let criticidade: Criticidade = 'OK';
@@ -265,7 +310,7 @@ const converterParaProcesso = (form: FormCadastro, index: number): Processo => {
     assunto: form.assunto,
     orgao: form.orgaoOrigem,
     responsavel: form.responsavel || 'Não atribuído',
-    prazoFinal: form.prazoFinal ? new Date(form.prazoFinal).toLocaleDateString('pt-BR') : '',
+    prazoFinal: form.prazoFinal ? formatarPrazoFinal(form.prazoFinal) : '',
     diasRestantes: diasTexto,
     situacao: (form.situacaoProcesso === 'em-andamento' ? 'Em andamento' : 'Em andamento') as SituacaoProcesso
   };
@@ -281,11 +326,11 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     // Carrega processos do localStorage
-    const procesosArmazenados = localStorage.getItem('processos_cadastrados');
-    if (procesosArmazenados) {
+    const processosArmazenados = localStorage.getItem('processos_cadastrados');
+    if (processosArmazenados) {
       try {
-        const procesos: FormCadastro[] = JSON.parse(procesosArmazenados);
-        const processosConvertidos = procesos.map((form, index) =>
+        const armazenados: FormCadastro[] = JSON.parse(processosArmazenados);
+        const processosConvertidos = armazenados.map((form, index) =>
           converterParaProcesso(form, index)
         );
         // Combina com os dados mockados
@@ -361,6 +406,31 @@ export const Dashboard: React.FC = () => {
 
     return () => {
       document.removeEventListener('click', fecharMenuAoClicarFora);
+    };
+  }, []);
+
+  useEffect(() => {
+    let timeoutId: number | null = null;
+
+    const scheduleNextMidnight = (): void => {
+      const now = new Date();
+      const nextMidnight = new Date(now);
+      nextMidnight.setDate(now.getDate() + 1);
+      nextMidnight.setHours(0, 0, 0, 0, 0);
+
+      const msUntilMidnight = nextMidnight.getTime() - now.getTime();
+      timeoutId = window.setTimeout(() => {
+        setProcessosExibicao((estadoAtual) => estadoAtual.map(recalcularProcesso));
+        scheduleNextMidnight();
+      }, msUntilMidnight);
+    };
+
+    scheduleNextMidnight();
+
+    return () => {
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
     };
   }, []);
 
