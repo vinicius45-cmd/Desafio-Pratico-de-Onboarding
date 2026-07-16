@@ -3,12 +3,14 @@ import {
   ClipboardList,
   Droplet,
   Eye,
+  EyeOff,
   FileSignature,
   LucideIcon,
   MoreVertical,
   PackagePlus,
   Puzzle,
-  TimerReset
+  TimerReset,
+  Trash2
 } from 'lucide-react';
 import { FormCadastro } from '../types';
 
@@ -42,45 +44,45 @@ interface ResumoCard {
   icone: LucideIcon;
 }
 
-const resumoCards: ResumoCard[] = [
+const getResumoCards = (processos: Processo[]): ResumoCard[] => [
   {
     titulo: 'Total de Processos',
-    valor: '1.248',
+    valor: String(processos.length),
     descricao: 'Todos os processos',
     variante: 'azul',
     icone: ClipboardList
   },
   {
     titulo: 'Atrasados',
-    valor: '32',
+    valor: String(processos.filter((processo) => processo.criticidade === 'Atrasado').length),
     descricao: 'Processos atrasados',
     variante: 'vermelho',
     icone: Droplet
   },
   {
     titulo: 'Vence Hoje',
-    valor: '15',
+    valor: String(processos.filter((processo) => processo.criticidade === 'Vence Hoje').length),
     descricao: 'Vencem hoje',
     variante: 'laranja',
     icone: TimerReset
   },
   {
     titulo: 'Próximos 5 dias',
-    valor: '48',
+    valor: String(processos.filter((processo) => processo.criticidade === 'Próximo do prazo').length),
     descricao: 'Vencem em até 5 dias',
     variante: 'amarelo',
     icone: PackagePlus
   },
   {
     titulo: 'Para Assinatura',
-    valor: '27',
+    valor: String(processos.filter((processo) => processo.criticidade === 'Para Assinatura').length),
     descricao: 'Aguardando assinatura',
     variante: 'cyan',
     icone: FileSignature
   },
   {
     titulo: 'Especiais',
-    valor: '11',
+    valor: String(processos.filter((processo) => processo.criticidade === 'Especial').length),
     descricao: 'Processos especiais',
     variante: 'roxo',
     icone: Puzzle
@@ -201,6 +203,25 @@ const getSituacaoVariant = (situacao: SituacaoProcesso): string => {
   return variants[situacao];
 };
 
+const getProcessosFiltrados = (processos: Processo[], filtroAtivo: string | null): Processo[] => {
+  if (!filtroAtivo || filtroAtivo === 'Total de Processos') {
+    return processos;
+  }
+
+  const criteriosPorCard: Record<string, Criticidade | Criticidade[]> = {
+    Atrasados: 'Atrasado',
+    'Vence Hoje': 'Vence Hoje',
+    'Próximos 5 dias': 'Próximo do prazo',
+    'Para Assinatura': 'Para Assinatura',
+    Especiais: 'Especial'
+  };
+
+  const criterios = criteriosPorCard[filtroAtivo];
+  const criteriosList = Array.isArray(criterios) ? criterios : [criterios];
+
+  return processos.filter((processo) => criteriosList.includes(processo.criticidade));
+};
+
 // Calcula dias restantes baseado nas datas
 const calcularDiasRestantes = (prazoFinal: string): number => {
   if (!prazoFinal) return 0;
@@ -252,6 +273,10 @@ const converterParaProcesso = (form: FormCadastro, index: number): Processo => {
 
 export const Dashboard: React.FC = () => {
   const [processosExibicao, setProcessosExibicao] = useState<Processo[]>([]);
+  const [filtroAtivo, setFiltroAtivo] = useState<string | null>(null);
+  const [processosComBlur, setProcessosComBlur] = useState<Record<number, boolean>>({});
+  const [menuAbertoId, setMenuAbertoId] = useState<number | null>(null);
+  const [processoParaExcluir, setProcessoParaExcluir] = useState<Processo | null>(null);
 
   useEffect(() => {
     // Carrega processos do localStorage
@@ -259,7 +284,7 @@ export const Dashboard: React.FC = () => {
     if (procesosArmazenados) {
       try {
         const procesos: FormCadastro[] = JSON.parse(procesosArmazenados);
-        const processosConvertidos = procesos.map((form, index) => 
+        const processosConvertidos = procesos.map((form, index) =>
           converterParaProcesso(form, index)
         );
         // Combina com os dados mockados
@@ -272,14 +297,70 @@ export const Dashboard: React.FC = () => {
       setProcessosExibicao(processos);
     }
   }, []);
+
+  const handleSelecionarCard = (titulo: string) => {
+    setFiltroAtivo((filtroAtual) => (filtroAtual === titulo ? null : titulo));
+  };
+
+  const alternarBlurProcesso = (id: number) => {
+    setProcessosComBlur((estadoAtual) => ({
+      ...estadoAtual,
+      [id]: !estadoAtual[id]
+    }));
+  };
+
+  const abrirMenuAcoes = (id: number, event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setMenuAbertoId((estadoAtual) => (estadoAtual === id ? null : id));
+  };
+
+  const iniciarExclusao = (processo: Processo) => {
+    setMenuAbertoId(null);
+    setProcessoParaExcluir(processo);
+  };
+
+  const confirmarExclusao = () => {
+    if (!processoParaExcluir) {
+      return;
+    }
+
+    setProcessosExibicao((estadoAtual) => estadoAtual.filter((processo) => processo.id !== processoParaExcluir.id));
+    setProcessosComBlur((estadoAtual) => {
+      const novoEstado = { ...estadoAtual };
+      delete novoEstado[processoParaExcluir.id];
+      return novoEstado;
+    });
+    setProcessoParaExcluir(null);
+  };
+
+  const cancelarExclusao = () => {
+    setProcessoParaExcluir(null);
+  };
+
+  const processosFiltrados = getProcessosFiltrados(processosExibicao, filtroAtivo);
+  const resumoCards = getResumoCards(processosExibicao);
+
   return (
     <section className="dashboard-page" aria-label="Dashboard">
       <div className="dashboard-summary">
         {resumoCards.map((card) => {
           const Icon = card.icone;
+          const estaAtivo = filtroAtivo === card.titulo;
 
           return (
-            <article className="dashboard-card" key={card.titulo}>
+            <article
+              className={`dashboard-card${estaAtivo ? ' dashboard-card--active' : ''}`}
+              key={card.titulo}
+              role="button"
+              tabIndex={0}
+              onClick={() => handleSelecionarCard(card.titulo)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  handleSelecionarCard(card.titulo);
+                }
+              }}
+            >
               <div className={`dashboard-card__icon dashboard-card__icon--${card.variante}`}>
                 <Icon size={23} strokeWidth={2.2} />
               </div>
@@ -295,8 +376,10 @@ export const Dashboard: React.FC = () => {
 
       <section className="dashboard-priority">
         <header className="dashboard-priority__header">
-          <h2>Prioridade de Atenção</h2>
-          <button type="button">Ver todos</button>
+          <h2>{filtroAtivo ? `Prioridade de Atenção • ${filtroAtivo}` : 'Prioridade de Atenção'}</h2>
+          <button type="button" onClick={() => setFiltroAtivo(null)}>
+            Ver todos
+          </button>
         </header>
 
         <div className="dashboard-table__wrap">
@@ -315,36 +398,54 @@ export const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {processosExibicao.map((processo) => (
+              {processosFiltrados.map((processo) => (
                 <tr key={processo.id}>
-                  <td>
+                  <td className={processosComBlur[processo.id] ? 'dashboard-cell--blurred' : ''}>
                     <span className={`dashboard-badge dashboard-badge--${getCriticidadeVariant(processo.criticidade)}`}>
                       {processo.criticidade}
                     </span>
                   </td>
-                  <td>{processo.numeroSei}</td>
-                  <td>{processo.assunto}</td>
-                  <td>{processo.orgao}</td>
-                  <td>{processo.responsavel}</td>
-                  <td>{processo.prazoFinal}</td>
-                  <td>
+                  <td className={processosComBlur[processo.id] ? 'dashboard-cell--blurred' : ''}>{processo.numeroSei}</td>
+                  <td className={processosComBlur[processo.id] ? 'dashboard-cell--blurred' : ''}>{processo.assunto}</td>
+                  <td className={processosComBlur[processo.id] ? 'dashboard-cell--blurred' : ''}>{processo.orgao}</td>
+                  <td className={processosComBlur[processo.id] ? 'dashboard-cell--blurred' : ''}>{processo.responsavel}</td>
+                  <td className={processosComBlur[processo.id] ? 'dashboard-cell--blurred' : ''}>{processo.prazoFinal}</td>
+                  <td className={processosComBlur[processo.id] ? 'dashboard-cell--blurred' : ''}>
                     <span className={`dashboard-table__days ${getDiasRestantesClass(processo.diasRestantes)}`}>
                       {processo.diasRestantes}
                     </span>
                   </td>
-                  <td>
+                  <td className={processosComBlur[processo.id] ? 'dashboard-cell--blurred' : ''}>
                     <span className={`dashboard-status dashboard-status--${getSituacaoVariant(processo.situacao)}`}>
                       {processo.situacao}
                     </span>
                   </td>
                   <td>
                     <div className="dashboard-actions">
-                      <button aria-label={`Visualizar processo ${processo.numeroSei}`} type="button">
-                        <Eye size={15} />
+                      <button
+                        aria-label={`Visualizar processo ${processo.numeroSei}`}
+                        type="button"
+                        onClick={() => alternarBlurProcesso(processo.id)}
+                      >
+                        {processosComBlur[processo.id] ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
-                      <button aria-label={`Mais ações para o processo ${processo.numeroSei}`} type="button">
-                        <MoreVertical size={16} />
-                      </button>
+                      <div className="dashboard-actions__menu">
+                        <button
+                          aria-label={`Mais ações para o processo ${processo.numeroSei}`}
+                          type="button"
+                          onClick={(event) => abrirMenuAcoes(processo.id, event)}
+                        >
+                          <MoreVertical size={16} />
+                        </button>
+                        {menuAbertoId === processo.id && (
+                          <div className="dashboard-actions__dropdown">
+                            <button type="button" onClick={() => iniciarExclusao(processo)}>
+                              <Trash2 size={14} />
+                              <span>Deletar</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -353,6 +454,26 @@ export const Dashboard: React.FC = () => {
           </table>
         </div>
       </section>
+
+      {processoParaExcluir && (
+        <div className="dashboard-delete-modal__overlay" role="presentation" onClick={cancelarExclusao}>
+          <div className="dashboard-delete-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <h3>Confirmar exclusão</h3>
+            <p>
+              Essa ação não poderá ser desfeita. Deseja excluir permanentemente o processo{' '}
+              <strong>{processoParaExcluir.numeroSei}</strong>?
+            </p>
+            <div className="dashboard-delete-modal__actions">
+              <button type="button" className="dashboard-delete-modal__cancel" onClick={cancelarExclusao}>
+                Cancelar
+              </button>
+              <button type="button" className="dashboard-delete-modal__confirm" onClick={confirmarExclusao}>
+                Confirmar exclusão
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
