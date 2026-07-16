@@ -832,6 +832,11 @@ body {
   white-space: nowrap;
 }
 
+.dashboard-table th:last-child,
+.dashboard-table td:last-child {
+  text-align: left;
+}
+
 .dashboard-table td {
   border-bottom: 1px solid #e8edf5;
   color: #182235;
@@ -927,7 +932,7 @@ body {
   align-items: center;
   display: flex;
   gap: 12px;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .dashboard-actions button {

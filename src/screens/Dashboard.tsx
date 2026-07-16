@@ -277,6 +277,7 @@ export const Dashboard: React.FC = () => {
   const [processosComBlur, setProcessosComBlur] = useState<Record<number, boolean>>({});
   const [menuAbertoId, setMenuAbertoId] = useState<number | null>(null);
   const [processoParaExcluir, setProcessoParaExcluir] = useState<Processo | null>(null);
+  const [mostrarTodosProcessos, setMostrarTodosProcessos] = useState(false);
 
   useEffect(() => {
     // Carrega processos do localStorage
@@ -300,6 +301,7 @@ export const Dashboard: React.FC = () => {
 
   const handleSelecionarCard = (titulo: string) => {
     setFiltroAtivo((filtroAtual) => (filtroAtual === titulo ? null : titulo));
+    setMostrarTodosProcessos(true);
   };
 
   const alternarBlurProcesso = (id: number) => {
@@ -337,7 +339,33 @@ export const Dashboard: React.FC = () => {
     setProcessoParaExcluir(null);
   };
 
+  const alternarVisibilidadeProcessos = () => {
+    if (filtroAtivo) {
+      setFiltroAtivo(null);
+      setMostrarTodosProcessos(true);
+      return;
+    }
+
+    setMostrarTodosProcessos((estadoAtual) => !estadoAtual);
+  };
+
+  useEffect(() => {
+    const fecharMenuAoClicarFora = (event: MouseEvent) => {
+      const alvo = event.target as HTMLElement;
+      if (!alvo.closest('.dashboard-actions__menu')) {
+        setMenuAbertoId(null);
+      }
+    };
+
+    document.addEventListener('click', fecharMenuAoClicarFora);
+
+    return () => {
+      document.removeEventListener('click', fecharMenuAoClicarFora);
+    };
+  }, []);
+
   const processosFiltrados = getProcessosFiltrados(processosExibicao, filtroAtivo);
+  const processosVisiveis = mostrarTodosProcessos ? processosFiltrados : processosFiltrados.slice(0, 7);
   const resumoCards = getResumoCards(processosExibicao);
 
   return (
@@ -346,15 +374,24 @@ export const Dashboard: React.FC = () => {
         {resumoCards.map((card) => {
           const Icon = card.icone;
           const estaAtivo = filtroAtivo === card.titulo;
+          const eCardTotal = card.titulo === 'Total de Processos';
 
           return (
             <article
-              className={`dashboard-card${estaAtivo ? ' dashboard-card--active' : ''}`}
+              className={`dashboard-card${estaAtivo && !eCardTotal ? ' dashboard-card--active' : ''}`}
               key={card.titulo}
-              role="button"
-              tabIndex={0}
-              onClick={() => handleSelecionarCard(card.titulo)}
+              role={eCardTotal ? undefined : 'button'}
+              tabIndex={eCardTotal ? undefined : 0}
+              onClick={() => {
+                if (!eCardTotal) {
+                  handleSelecionarCard(card.titulo);
+                }
+              }}
               onKeyDown={(event) => {
+                if (eCardTotal) {
+                  return;
+                }
+
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault();
                   handleSelecionarCard(card.titulo);
@@ -377,9 +414,11 @@ export const Dashboard: React.FC = () => {
       <section className="dashboard-priority">
         <header className="dashboard-priority__header">
           <h2>{filtroAtivo ? `Prioridade de Atenção • ${filtroAtivo}` : 'Prioridade de Atenção'}</h2>
-          <button type="button" onClick={() => setFiltroAtivo(null)}>
-            Ver todos
-          </button>
+          {processosFiltrados.length > 7 && (
+            <button type="button" onClick={alternarVisibilidadeProcessos}>
+              {mostrarTodosProcessos ? 'Ver menos' : 'Ver todos'}
+            </button>
+          )}
         </header>
 
         <div className="dashboard-table__wrap">
@@ -398,7 +437,7 @@ export const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {processosFiltrados.map((processo) => (
+              {processosVisiveis.map((processo) => (
                 <tr key={processo.id}>
                   <td className={processosComBlur[processo.id] ? 'dashboard-cell--blurred' : ''}>
                     <span className={`dashboard-badge dashboard-badge--${getCriticidadeVariant(processo.criticidade)}`}>
