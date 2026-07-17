@@ -262,6 +262,52 @@
   margin-top: 24px;
 }
 
+.administracao-save-message {
+  margin-top: 18px;
+  color: #047857;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.24);
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-weight: 700;
+}
+
+.administracao-permissions-card {
+  background: var(--semob-surface);
+  border: 1px solid var(--semob-border);
+  border-radius: 22px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+  padding: 24px;
+}
+
+.administracao-permissions-table-wrapper {
+  overflow: auto;
+}
+
+.administracao-permissions-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.administracao-permissions-table thead th,
+.administracao-permissions-table tbody td {
+  padding: 16px 18px;
+  text-align: left;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.administracao-permissions-table thead th {
+  color: var(--semob-text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.administracao-permissions-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
 .administracao-table-card {
   background: var(--semob-surface);
   border: 1px solid var(--semob-border);

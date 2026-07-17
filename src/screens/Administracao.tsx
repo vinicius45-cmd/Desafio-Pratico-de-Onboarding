@@ -93,12 +93,36 @@ const Administracao: React.FC = () => {
   });
   const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<UsuarioAdmin | null>(null);
   const [isConfirmacaoExcluirAberto, setIsConfirmacaoExcluirAberto] = useState(false);
+  const [configuracoesSalvas, setConfiguracoesSalvas] = useState(false);
+  const [permissoes, setPermissoes] = useState([
+    { id: 'cdp-usuarios', nome: 'Gerenciar usuários', descricao: 'Permite visualizar e editar usuários do sistema.', nivel: 'ESCRITA' as const },
+    { id: 'cdp-grupos', nome: 'Gerenciar perfis', descricao: 'Permite alterar perfis e grupos de acesso.', nivel: 'ESCRITA' as const },
+    { id: 'cdp-sistemas', nome: 'Acessar controle de sistemas', descricao: 'Permite acesso ao painel de sistemas no CDP.', nivel: 'LEITURA' as const },
+    { id: 'sif-validador', nome: 'Validadores', descricao: 'Permite acessar a lista de validadores.', nivel: 'LEITURA' as const }
+  ]);
+  const [permissoesSalvas, setPermissoesSalvas] = useState(false);
 
   const handleToggle = (field: keyof ConfiguracaoSistema): void => {
     setConfiguracoes((current) => ({
       ...current,
       [field]: !current[field]
     }));
+    setConfiguracoesSalvas(false);
+  };
+
+  const handleSalvarConfiguracoes = (): void => {
+    setConfiguracoesSalvas(true);
+  };
+
+  const handlePermissaoChange = (id: string, nivel: 'NENHUM' | 'LEITURA' | 'ESCRITA'): void => {
+    setPermissoes((current) => current.map((item) => (
+      item.id === id ? { ...item, nivel } : item
+    )));
+    setPermissoesSalvas(false);
+  };
+
+  const handleSalvarPermissoes = (): void => {
+    setPermissoesSalvas(true);
   };
 
   const handleSelectAba = (aba: TabAdministracao): void => {
@@ -107,6 +131,8 @@ const Administracao: React.FC = () => {
     setIsConfirmacaoExcluirAberto(false);
     setUsuarioSelecionado(null);
     setUsuarioParaExcluir(null);
+    setConfiguracoesSalvas(false);
+    setPermissoesSalvas(false);
   };
 
   const abrirFormularioNovo = (): void => {
@@ -416,17 +442,62 @@ const Administracao: React.FC = () => {
             </button>
           </div>
           <div className="administracao-config-actions">
-            <button type="button" className="administracao-button administracao-button--secondary">
+            <button type="button" className="administracao-button administracao-button--secondary" onClick={handleSalvarConfiguracoes}>
               Salvar alterações
             </button>
           </div>
+          {configuracoesSalvas && (
+            <div className="administracao-save-message">Alterações salvas</div>
+          )}
         </div>
       )}
 
       {abaAtiva === 'permissoes' && (
-        <div className="administracao-placeholder-card">
-          <h2>Permissões</h2>
-          <p>Configuração de perfis e acesso será exibida aqui quando a aba estiver habilitada.</p>
+        <div className="administracao-permissions-card">
+          <div className="administracao-form-header">
+            <div>
+              <p className="administracao-form-subtitle">Permissões</p>
+              <h2>Gerenciar permissões</h2>
+            </div>
+          </div>
+          <div className="administracao-permissions-table-wrapper">
+            <table className="administracao-permissions-table">
+              <thead>
+                <tr>
+                  <th>Permissão</th>
+                  <th>Descrição</th>
+                  <th>Nível</th>
+                </tr>
+              </thead>
+              <tbody>
+                {permissoes.map((permissao) => (
+                  <tr key={permissao.id}>
+                    <td>{permissao.nome}</td>
+                    <td>{permissao.descricao}</td>
+                    <td>
+                      <select
+                        className="administracao-form-select"
+                        value={permissao.nivel}
+                        onChange={(event) => handlePermissaoChange(permissao.id, event.target.value as 'NENHUM' | 'LEITURA' | 'ESCRITA')}
+                      >
+                        <option value="NENHUM">Sem acesso</option>
+                        <option value="LEITURA">Leitura</option>
+                        <option value="ESCRITA">Escrita</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="administracao-config-actions">
+            <button type="button" className="administracao-button administracao-button--secondary" onClick={handleSalvarPermissoes}>
+              Salvar alterações
+            </button>
+          </div>
+          {permissoesSalvas && (
+            <div className="administracao-save-message">Alterações salvas</div>
+          )}
         </div>
       )}
     </section>
