@@ -194,12 +194,80 @@
 }
 
 .administracao-config-card,
-.administracao-placeholder-card {
+.administracao-placeholder-card,
+.administracao-form-card {
   background: var(--semob-surface);
   border: 1px solid var(--semob-border);
   border-radius: 22px;
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
   padding: 24px;
+}
+
+.administracao-form-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.administracao-form-subtitle {
+  color: var(--semob-text-muted);
+  font-size: 0.88rem;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.administracao-form-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.administracao-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.administracao-form-label {
+  color: var(--semob-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.administracao-form-input,
+.administracao-form-select {
+  background: #ffffff;
+  border: 1px solid var(--semob-border);
+  border-radius: 14px;
+  color: var(--semob-text);
+  font-size: 0.95rem;
+  padding: 14px 16px;
+  width: 100%;
+}
+
+.administracao-form-input:focus,
+.administracao-form-select:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
+}
+
+.administracao-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.administracao-table-card {
+  background: var(--semob-surface);
+  border: 1px solid var(--semob-border);
+  border-radius: 22px;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
 }
 
 .administracao-config-row {

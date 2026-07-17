@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Popup from '../components/Popup';
+import { Button } from '../components/Button';
 import '../styles/Administracao.css';
 
 type TabAdministracao = 'usuarios' | 'configuracoes' | 'permissoes';
@@ -79,6 +81,18 @@ const statusLabel: Record<StatusUsuario, string> = {
 const Administracao: React.FC = () => {
   const [abaAtiva, setAbaAtiva] = useState<TabAdministracao>('usuarios');
   const [configuracoes, setConfiguracoes] = useState<ConfiguracaoSistema>(configuracoesMock);
+  const [usuarios, setUsuarios] = useState<UsuarioAdmin[]>(usuariosMock);
+  const [isFormularioAberto, setIsFormularioAberto] = useState(false);
+  const [modoEdicao, setModoEdicao] = useState<'novo' | 'editar'>('novo');
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState<UsuarioAdmin | null>(null);
+  const [formData, setFormData] = useState<Omit<UsuarioAdmin, 'id'>>({
+    nome: '',
+    email: '',
+    perfil: 'admin',
+    status: 'ativo'
+  });
+  const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<UsuarioAdmin | null>(null);
+  const [isConfirmacaoExcluirAberto, setIsConfirmacaoExcluirAberto] = useState(false);
 
   const handleToggle = (field: keyof ConfiguracaoSistema): void => {
     setConfiguracoes((current) => ({
@@ -87,11 +101,104 @@ const Administracao: React.FC = () => {
     }));
   };
 
+  const handleSelectAba = (aba: TabAdministracao): void => {
+    setAbaAtiva(aba);
+    setIsFormularioAberto(false);
+    setIsConfirmacaoExcluirAberto(false);
+    setUsuarioSelecionado(null);
+    setUsuarioParaExcluir(null);
+  };
+
+  const abrirFormularioNovo = (): void => {
+    setModoEdicao('novo');
+    setUsuarioSelecionado(null);
+    setFormData({ nome: '', email: '', perfil: 'admin', status: 'ativo' });
+    setIsFormularioAberto(true);
+  };
+
+  const abrirFormularioEdicao = (usuario: UsuarioAdmin): void => {
+    setModoEdicao('editar');
+    setUsuarioSelecionado(usuario);
+    setFormData({ nome: usuario.nome, email: usuario.email, perfil: usuario.perfil, status: usuario.status });
+    setIsFormularioAberto(true);
+  };
+
+  const fecharFormulario = (): void => {
+    setIsFormularioAberto(false);
+    setUsuarioSelecionado(null);
+  };
+
+  const atualizarFormulario = (field: keyof Omit<UsuarioAdmin, 'id'>, value: string): void => {
+    setFormData((current) => ({
+      ...current,
+      [field]: field === 'perfil'
+        ? (value as PerfilAcesso)
+        : field === 'status'
+          ? (value as StatusUsuario)
+          : value
+    }));
+  };
+
+  const salvarUsuario = (): void => {
+    if (!formData.nome.trim() || !formData.email.trim()) {
+      window.alert('Preencha nome e e-mail para continuar.');
+      return;
+    }
+
+    if (modoEdicao && usuarioSelecionado) {
+      setUsuarios((current) => current.map((usuario) => (
+        usuario.id === usuarioSelecionado.id
+          ? { ...usuario, ...formData }
+          : usuario
+      )));
+    } else {
+      const novoUsuario: UsuarioAdmin = {
+        id: `u-${Date.now()}`,
+        ...formData
+      };
+
+      setUsuarios((current) => [novoUsuario, ...current]);
+    }
+
+    fecharFormulario();
+  };
+
+  const alternarStatusUsuario = (usuario: UsuarioAdmin): void => {
+    setUsuarios((current) => current.map((item) => (
+      item.id === usuario.id
+        ? { ...item, status: item.status === 'ativo' ? 'inativo' : 'ativo' }
+        : item
+    )));
+  };
+
+  const abrirConfirmacaoExcluir = (usuario: UsuarioAdmin): void => {
+    setUsuarioParaExcluir(usuario);
+    setIsConfirmacaoExcluirAberto(true);
+  };
+
+  const cancelarExcluir = (): void => {
+    setUsuarioParaExcluir(null);
+    setIsConfirmacaoExcluirAberto(false);
+  };
+
+  const confirmarExcluir = (): void => {
+    if (!usuarioParaExcluir) return;
+
+    setUsuarios((current) => current.filter((usuario) => usuario.id !== usuarioParaExcluir.id));
+    setIsConfirmacaoExcluirAberto(false);
+
+    if (usuarioSelecionado?.id === usuarioParaExcluir.id) {
+      fecharFormulario();
+    }
+
+    setUsuarioParaExcluir(null);
+  };
+
   return (
     <section className="administracao-page" aria-label="Administração">
       <div className="administracao-header-row">
         <h1>Administração</h1>
-        <button type="button" className="administracao-button administracao-button--primary">
+        <button type="button" className="administracao-button administracao-button--primary" onClick={abrirFormularioNovo}>
           + Novo Usuário
         </button>
       </div>
@@ -100,7 +207,7 @@ const Administracao: React.FC = () => {
         <button
           type="button"
           className={`administracao-tab ${abaAtiva === 'usuarios' ? 'administracao-tab--active' : ''}`}
-          onClick={() => setAbaAtiva('usuarios')}
+          onClick={() => handleSelectAba('usuarios')}
           aria-selected={abaAtiva === 'usuarios'}
         >
           Usuários do Sistema
@@ -108,7 +215,7 @@ const Administracao: React.FC = () => {
         <button
           type="button"
           className={`administracao-tab ${abaAtiva === 'configuracoes' ? 'administracao-tab--active' : ''}`}
-          onClick={() => setAbaAtiva('configuracoes')}
+          onClick={() => handleSelectAba('configuracoes')}
           aria-selected={abaAtiva === 'configuracoes'}
         >
           Configurações Gerais
@@ -116,7 +223,7 @@ const Administracao: React.FC = () => {
         <button
           type="button"
           className={`administracao-tab ${abaAtiva === 'permissoes' ? 'administracao-tab--active' : ''}`}
-          onClick={() => setAbaAtiva('permissoes')}
+          onClick={() => handleSelectAba('permissoes')}
           aria-selected={abaAtiva === 'permissoes'}
         >
           Permissões
@@ -124,43 +231,156 @@ const Administracao: React.FC = () => {
       </div>
 
       {abaAtiva === 'usuarios' && (
-        <div className="administracao-table-card">
-          <table className="administracao-table">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>E-mail</th>
-                <th>Perfil/Cargo</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuariosMock.map((usuario) => (
-                <tr key={usuario.id}>
-                  <td>
-                    <strong>{usuario.nome}</strong>
-                  </td>
-                  <td>{usuario.email}</td>
-                  <td>
-                    <span className={`administracao-tag administracao-tag--${usuario.perfil}`}>
-                      {perfilLabel[usuario.perfil]}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`administracao-status administracao-status--${usuario.status}`}>
-                      {statusLabel[usuario.status]}
-                    </span>
-                  </td>
-                  <td className="administracao-actions-cell">
-                    <button type="button" className="administracao-icon-button">Editar</button>
-                    <button type="button" className="administracao-icon-button administracao-icon-button--danger">Bloquear</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          {isFormularioAberto ? (
+            <div className="administracao-form-card">
+              <div className="administracao-form-header">
+                <div>
+                  <p className="administracao-form-subtitle">Usuários do Sistema</p>
+                  <h2>{modoEdicao === 'editar' ? 'Editar usuário' : 'Cadastrar novo usuário'}</h2>
+                </div>
+                <button
+                  type="button"
+                  className="administracao-icon-button administracao-icon-button--secondary"
+                  onClick={fecharFormulario}
+                >
+                  Voltar para lista
+                </button>
+              </div>
+
+              <div className="administracao-form-grid">
+                <div className="administracao-form-row">
+                  <label className="administracao-form-label" htmlFor="nome">Nome completo</label>
+                  <input
+                    id="nome"
+                    className="administracao-form-input"
+                    type="text"
+                    value={formData.nome}
+                    onChange={(event) => atualizarFormulario('nome', event.target.value)}
+                    placeholder="Nome do usuário"
+                  />
+                </div>
+                <div className="administracao-form-row">
+                  <label className="administracao-form-label" htmlFor="email">E-mail</label>
+                  <input
+                    id="email"
+                    className="administracao-form-input"
+                    type="email"
+                    value={formData.email}
+                    onChange={(event) => atualizarFormulario('email', event.target.value)}
+                    placeholder="usuario@dominio.gov.br"
+                  />
+                </div>
+                <div className="administracao-form-row">
+                  <label className="administracao-form-label" htmlFor="perfil">Perfil / Cargo</label>
+                  <select
+                    id="perfil"
+                    className="administracao-form-select"
+                    value={formData.perfil}
+                    onChange={(event) => atualizarFormulario('perfil', event.target.value)}
+                  >
+                    <option value="admin">Administrador</option>
+                    <option value="analista">Analista</option>
+                    <option value="visualizador">Visualizador</option>
+                  </select>
+                </div>
+                <div className="administracao-form-row">
+                  <label className="administracao-form-label" htmlFor="status">Status</label>
+                  <select
+                    id="status"
+                    className="administracao-form-select"
+                    value={formData.status}
+                    onChange={(event) => atualizarFormulario('status', event.target.value)}
+                  >
+                    <option value="ativo">Ativo</option>
+                    <option value="inativo">Inativo</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="administracao-form-actions">
+                <Button variant="outline" size="md" onClick={fecharFormulario}>Cancelar</Button>
+                <Button variant="primary" size="md" onClick={salvarUsuario}>
+                  {modoEdicao === 'editar' ? 'Salvar alterações' : 'Cadastrar usuário'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="administracao-table-card">
+              <table className="administracao-table">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>E-mail</th>
+                    <th>Perfil/Cargo</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usuarios.map((usuario) => (
+                    <tr key={usuario.id}>
+                      <td>
+                        <strong>{usuario.nome}</strong>
+                      </td>
+                      <td>{usuario.email}</td>
+                      <td>
+                        <span className={`administracao-tag administracao-tag--${usuario.perfil}`}>
+                          {perfilLabel[usuario.perfil]}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`administracao-status administracao-status--${usuario.status}`}>
+                          {statusLabel[usuario.status]}
+                        </span>
+                      </td>
+                      <td className="administracao-actions-cell">
+                        <button
+                          type="button"
+                          className="administracao-icon-button"
+                          onClick={() => abrirFormularioEdicao(usuario)}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className={`administracao-icon-button ${usuario.status === 'ativo' ? 'administracao-icon-button--danger' : ''}`}
+                          onClick={() => alternarStatusUsuario(usuario)}
+                        >
+                          {usuario.status === 'ativo' ? 'Bloquear' : 'Ativar'}
+                        </button>
+                        <button
+                          type="button"
+                          className="administracao-icon-button administracao-icon-button--danger"
+                          onClick={() => abrirConfirmacaoExcluir(usuario)}
+                        >
+                          Excluir
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <Popup
+            isOpen={isConfirmacaoExcluirAberto}
+            onClose={cancelarExcluir}
+            title="Confirmar exclusão"
+            variant="danger"
+            size="sm"
+            actions={(
+              <>
+                <Button variant="outline" size="sm" onClick={cancelarExcluir}>Cancelar</Button>
+                <Button variant="danger" size="sm" onClick={confirmarExcluir}>Excluir</Button>
+              </>
+            )}
+          >
+            <p>Tem certeza que deseja excluir o usuário <strong>{usuarioParaExcluir?.nome}</strong>?</p>
+            <p style={{ marginTop: '0.75rem' }}>Esta ação não pode ser desfeita.</p>
+          </Popup>
+        </>
       )}
 
       {abaAtiva === 'configuracoes' && (

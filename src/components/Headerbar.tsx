@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Bell,
   ChevronDown,
   ChevronUp,
   LogOut,
@@ -25,7 +26,7 @@ const getInitials = (name: string): string => {
 
 export const Headerbar: React.FC = () => {
   const { usuario, fazerLogout } = useAuth();
-  const { theme, toggleTheme, activeModuleId, activeSubMenuId, toggleSidebar } = useApp();
+  const { theme, toggleTheme, activeModuleId, activeSubMenuId, toggleSidebar, navegarPara } = useApp();
   const { modulos } = useModules();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -70,6 +71,15 @@ export const Headerbar: React.FC = () => {
       </form>
 
       <div className="app-header__actions">
+        <button
+          aria-label="Ir para alertas"
+          className="app-header__icon-button"
+          onClick={() => navegarPara('alertas')}
+          type="button"
+        >
+          <Bell size={19} />
+        </button>
+
         <button
           aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
           className="app-header__icon-button"
