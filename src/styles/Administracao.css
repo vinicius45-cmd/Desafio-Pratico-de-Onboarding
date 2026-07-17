@@ -265,11 +265,39 @@
 .administracao-save-message {
   margin-top: 18px;
   color: #047857;
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.24);
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.28);
   border-radius: 14px;
   padding: 14px 18px;
   font-weight: 700;
+  animation: fadeOutMessage 3s ease-in forwards;
+}
+
+@keyframes fadeOutMessage {
+  0% {
+    opacity: 1;
+    color: #047857;
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(16, 185, 129, 0.28);
+  }
+  60% {
+    opacity: 1;
+    color: #047857;
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(16, 185, 129, 0.28);
+  }
+  80% {
+    opacity: 0.6;
+    color: #065f46;
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.16);
+  }
+  100% {
+    opacity: 0;
+    color: rgba(4, 120, 87, 0);
+    background: rgba(16, 185, 129, 0);
+    border-color: rgba(16, 185, 129, 0);
+  }
 }
 
 .administracao-permissions-card {

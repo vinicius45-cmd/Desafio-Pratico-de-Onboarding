@@ -112,6 +112,7 @@ const Administracao: React.FC = () => {
 
   const handleSalvarConfiguracoes = (): void => {
     setConfiguracoesSalvas(true);
+    window.setTimeout(() => setConfiguracoesSalvas(false), 3000);
   };
 
   const handlePermissaoChange = (id: string, nivel: 'NENHUM' | 'LEITURA' | 'ESCRITA'): void => {
@@ -123,6 +124,7 @@ const Administracao: React.FC = () => {
 
   const handleSalvarPermissoes = (): void => {
     setPermissoesSalvas(true);
+    window.setTimeout(() => setPermissoesSalvas(false), 3000);
   };
 
   const handleSelectAba = (aba: TabAdministracao): void => {
