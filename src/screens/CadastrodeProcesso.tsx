@@ -1,8 +1,12 @@
 import React, { ChangeEvent, FormEvent, useState, useEffect } from 'react';
+import { useApp } from '../app/AppProvider';
 import { FormCadastro, ResumoProcesso } from '../types';
 import '../styles/CadastrodeProcesso.css';
 
 const CadastrodeProcesso: React.FC = () => {
+  const { processoSelecionado, modoVisualizacaoProcesso, definirProcessoSelecionado, navegarPara } = useApp();
+  const modoEdicao = Boolean(processoSelecionado && modoVisualizacaoProcesso === 'editar');
+
   // Constantes para opções dos SELECTs
   const TIPOS_ASSUNTO = [
     'Ofício',
@@ -161,6 +165,17 @@ const CadastrodeProcesso: React.FC = () => {
     carregarProcessosSalvos();
   }, []);
 
+  useEffect(() => {
+    if (processoSelecionado) {
+      setForm({
+        ...processoSelecionado,
+        solicitudesInformacao: processoSelecionado.solicitudesInformacao ?? [],
+      });
+      setMostrarListaProcessos(false);
+      setMostrarResumo(true);
+    }
+  }, [processoSelecionado]);
+
   // Filtra processos quando há alteração na busca ou no filtro de respostas
   useEffect(() => {
     const filtrados = processosSalvos.filter((processo) => {
@@ -259,12 +274,17 @@ const CadastrodeProcesso: React.FC = () => {
       return;
     }
 
-    // Salva o processo
-    salvarProcessoNoStorage(form);
-    alert('Processo cadastrado com sucesso!');
+    const processoParaSalvar = {
+      ...form,
+      id: form.id || processoSelecionado?.id || Date.now().toString(),
+    };
 
-    // Limpa o formulário
-    handleCancel();
+    // Salva o processo
+    salvarProcessoNoStorage(processoParaSalvar);
+    alert(modoEdicao ? 'Processo atualizado com sucesso!' : 'Processo cadastrado com sucesso!');
+
+    definirProcessoSelecionado(null, null);
+    navegarPara('pendencias');
   };
 
   const handleCancel = (): void => {
@@ -287,6 +307,11 @@ const CadastrodeProcesso: React.FC = () => {
       observacao: '',
     });
     setBusca('');
+
+    if (processoSelecionado) {
+      definirProcessoSelecionado(null, null);
+      navegarPara('pendencias');
+    }
   };
 
   const carregarProcesso = (processo: FormCadastro): void => {
@@ -308,7 +333,7 @@ const CadastrodeProcesso: React.FC = () => {
         <nav className="breadcrumb">
           <span className="breadcrumb-item">Cadastro de Processo</span>
           <span className="breadcrumb-separator">›</span>
-          <span className="breadcrumb-item active">Novo Processo</span>
+          <span className="breadcrumb-item active">{modoEdicao ? 'Editar Processo' : 'Novo Processo'}</span>
         </nav>
       </div>
 

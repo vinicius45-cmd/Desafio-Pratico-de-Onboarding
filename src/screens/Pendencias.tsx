@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MoreVertical } from 'lucide-react';
-import { CardPendencia, PendenciasKanban } from '../types';
+import { useApp } from '../app/AppProvider';
+import { CardPendencia, FormCadastro, PendenciasKanban } from '../types';
 import '../styles/Pendencias.css';
 
 interface ColumnConfig {
@@ -50,10 +51,54 @@ interface MenuAberto {
   cardId: string | null;
 }
 
-const Card: React.FC<{ card: CardPendencia; onMenuClick: (cardId: string) => void; menuAberto: MenuAberto }> = ({
+type AcaoProcesso = 'editar' | 'visualizar';
+
+const formatDateLocal = (value: Date): string => {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const construirProcessoMockado = (card: CardPendencia): FormCadastro => {
+  const hoje = new Date();
+  const dataEntrada = new Date(hoje);
+  dataEntrada.setDate(hoje.getDate() - 3);
+
+  const prazoFinal = new Date(hoje);
+  prazoFinal.setDate(hoje.getDate() + Math.max(5, card.diasRestantes + 8));
+
+  const orgaoOrigem = card.setor.includes('Saúde')
+    ? 'secretaria-saude'
+    : card.setor.includes('Educação')
+      ? 'secretaria-educacao'
+      : 'secretaria-fazenda';
+
+  return {
+    processoINCRA: card.processoId,
+    requerimento: `REQ-${card.processoId.replace(/[^0-9]/g, '').slice(0, 4)}`,
+    assunto: card.titulo,
+    assuntoTipo: 'Ofício',
+    destinatario: card.setor,
+    solicitudesInformacao: ['Solicitação de documentação'],
+    orgaoOrigem,
+    dataEntrada: formatDateLocal(dataEntrada),
+    prazoAreaTecnica: formatDateLocal(new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 2)),
+    prazoFinal: formatDateLocal(prazoFinal),
+    situacaoProcesso: 'em-andamento',
+    responsavel: 'joao-silva',
+    documentoSEI: '',
+    especial: card.status === 'especiais',
+    filtroRespostas: false,
+    observacao: `Processo aberto a partir da pendência ${card.titulo} no setor ${card.setor}.`,
+  };
+};
+
+const Card: React.FC<{ card: CardPendencia; onMenuClick: (cardId: string) => void; menuAberto: MenuAberto; onAction: (card: CardPendencia, modo: AcaoProcesso) => void }> = ({
   card,
   onMenuClick,
-  menuAberto
+  menuAberto,
+  onAction
 }) => {
   const diasClass = card.diasRestantes < 0 ? 'card-dias--atrasado' : card.diasRestantes === 0 ? 'card-dias--hoje' : 'card-dias--ok';
 
@@ -71,10 +116,8 @@ const Card: React.FC<{ card: CardPendencia; onMenuClick: (cardId: string) => voi
 
         {menuAberto.cardId === card.id && (
           <div className="card-menu-dropdown">
-            <button type="button">Editar</button>
-            <button type="button">Visualizar Detalhes</button>
-            <button type="button">Atribuir</button>
-            <button type="button">Arquivar</button>
+            <button type="button" onClick={() => onAction(card, 'editar')}>Editar</button>
+            <button type="button" onClick={() => onAction(card, 'visualizar')}>Visualizar detalhes</button>
           </div>
         )}
       </div>
@@ -91,12 +134,19 @@ const Card: React.FC<{ card: CardPendencia; onMenuClick: (cardId: string) => voi
 };
 
 const Pendencias: React.FC = () => {
+  const { navegarPara, definirProcessoSelecionado } = useApp();
   const [menuAberto, setMenuAberto] = useState<MenuAberto>({ cardId: null });
 
   const handleMenuClick = (cardId: string): void => {
     setMenuAberto((prev) => ({
       cardId: prev.cardId === cardId ? null : cardId
     }));
+  };
+
+  const abrirProcesso = (card: CardPendencia, modo: AcaoProcesso): void => {
+    definirProcessoSelecionado(construirProcessoMockado(card), modo);
+    navegarPara(modo === 'editar' ? 'cadastro-processo' : 'meus-processos');
+    setMenuAberto({ cardId: null });
   };
 
   return (
@@ -124,6 +174,7 @@ const Pendencias: React.FC = () => {
                     card={card}
                     onMenuClick={handleMenuClick}
                     menuAberto={menuAberto}
+                    onAction={abrirProcesso}
                   />
                 ))}
               </div>

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { AuthProvider } from '../hooks/useAuth';
 import { ModulesProvider } from '../hooks/useModules';
 
-import { AppContextType } from '../types';
+import { AppContextType, FormCadastro } from '../types';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -10,6 +10,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [activeModuleId, setActiveModuleId] = useState<string>('dash');
   const [activeSubMenuId, setActiveSubMenuId] = useState<string | null>(null);
+  const [processoSelecionado, setProcessoSelecionado] = useState<FormCadastro | null>(null);
+  const [modoVisualizacaoProcesso, setModoVisualizacaoProcesso] = useState<'editar' | 'visualizar' | null>(null);
   
   // Responsive sidebar open state: closed by default on mobile, open on desktop
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
@@ -27,6 +29,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
+  const definirProcessoSelecionado = (processo: FormCadastro | null, modo: 'editar' | 'visualizar' | null = null) => {
+    setProcessoSelecionado(processo);
+    setModoVisualizacaoProcesso(modo);
+  };
 
   // Resize listener to adapt sidebar state
   useEffect(() => {
@@ -50,7 +57,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       navegarPara,
       sidebarOpen,
       toggleSidebar,
-      setSidebarOpen
+      setSidebarOpen,
+      processoSelecionado,
+      modoVisualizacaoProcesso,
+      definirProcessoSelecionado
     }}>
       <AuthProvider>
         <ModulesProvider>

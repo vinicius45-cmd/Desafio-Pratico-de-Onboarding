@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { ChevronDown, Edit3, FileText, MoreHorizontal } from 'lucide-react';
+import { FileText } from 'lucide-react';
+import { useApp } from '../app/AppProvider';
+import { FormCadastro } from '../types';
 import '../styles/DetalhesProcesso.css';
 
 type AbaAtiva = 'dados' | 'historico' | 'movimentacoes' | 'anexos' | 'observacoes';
@@ -36,35 +38,6 @@ const tabs: Array<{ id: AbaAtiva; label: string }> = [
   { id: 'observacoes', label: 'Observações' }
 ];
 
-const processoDetalheMock: ProcessoDetalhe = {
-  numeroSei: '0001234/2024-10',
-  statusLabel: 'Atrasado',
-  diasAtraso: '-3 dias',
-  assunto: 'Solicitação de Informação',
-  orgaoOrigem: 'Secretaria de Saúde',
-  dados: [
-    { label: 'Processo SEI Nº', value: '0001234/2024-10' },
-    { label: 'Requerimento', value: 'REQ-2024/1243' },
-    { label: 'Assunto', value: 'Solicitação de Informação' },
-    { label: 'Órgão de Origem', value: 'Secretaria de Saúde' },
-    { label: 'Data de Entrada', value: '10/05/2024', variant: 'neutral' },
-    { label: 'Prazo Área Técnica', value: '24/05/2024', variant: 'success' },
-    { label: 'Responsável', value: 'João da Silva' },
-    { label: 'Documento SEI - Resposta', value: 'Não informado' },
-    { label: 'Situação do Processo', value: 'Em andamento', variant: 'info' },
-    { label: 'Prazo Final', value: '10/05/2024', variant: 'danger' },
-    { label: 'Dias Restantes', value: '-3 dias', variant: 'danger' },
-    { label: 'Especial', value: 'Especial', isCheckbox: true, checked: false }
-  ],
-  resumo: [
-    { label: 'Status', value: 'Atrasado', variant: 'danger' },
-    { label: 'Diferença', value: '-3 dias', variant: 'danger' },
-    { label: 'Prazo Final', value: '10/05/2024', variant: 'neutral' },
-    { label: 'Dias Restantes', value: '-3 dias', variant: 'danger' },
-    { label: 'Situação', value: 'Em andamento', variant: 'info' }
-  ]
-};
-
 const getVariantClass = (variant: ProcessoCampo['variant'] | ResumoItem['variant'] = 'neutral'): string => {
   switch (variant) {
     case 'danger':
@@ -78,9 +51,81 @@ const getVariantClass = (variant: ProcessoCampo['variant'] | ResumoItem['variant
   }
 };
 
+const formatDate = (value: string): string => {
+  if (!value) return 'Não informado';
+
+  const [year, month, day] = value.split('-').map(Number);
+  const parsed = new Date(year, month - 1, day);
+  return parsed.toLocaleDateString('pt-BR');
+};
+
+const mapearOrgao = (value: string): string => {
+  const mapa: Record<string, string> = {
+    'secretaria-saude': 'Secretária de Saúde',
+    'secretaria-educacao': 'Secretária de Educação',
+    'secretaria-fazenda': 'Secretária da Fazenda',
+  };
+
+  return mapa[value] || value;
+};
+
+const mapearSituacao = (value: string): string => {
+  const mapa: Record<string, string> = {
+    'em-andamento': 'Em andamento',
+    'concluido': 'Concluído',
+    'parado': 'Parado',
+  };
+
+  return mapa[value] || value;
+};
+
+const construirProcessoDetalhe = (processo: FormCadastro | null): ProcessoDetalhe => {
+  const diasRestantes = processo?.prazoFinal
+    ? Math.floor((new Date(processo.prazoFinal).getTime() - new Date().setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24))
+    : 0;
+
+  const statusLabel = diasRestantes < 0 ? 'Atrasado' : diasRestantes === 0 ? 'Vence hoje' : 'Em dia';
+  const diasAtraso = diasRestantes === 0 ? 'Hoje' : `${diasRestantes > 0 ? '+' : ''}${diasRestantes} dias`;
+
+  return {
+    numeroSei: processo?.processoINCRA || '0001234/2024-10',
+    statusLabel,
+    diasAtraso,
+    assunto: processo?.assunto || 'Solicitação de Informação',
+    orgaoOrigem: mapearOrgao(processo?.orgaoOrigem || 'secretaria-saude'),
+    dados: [
+      { label: 'Processo SEI Nº', value: processo?.processoINCRA || '0001234/2024-10' },
+      { label: 'Requerimento', value: processo?.requerimento || 'REQ-2024/1243' },
+      { label: 'Assunto', value: processo?.assunto || 'Solicitação de Informação' },
+      { label: 'Órgão de Origem', value: mapearOrgao(processo?.orgaoOrigem || 'secretaria-saude') },
+      { label: 'Data de Entrada', value: formatDate(processo?.dataEntrada || '2024-05-10'), variant: 'neutral' },
+      { label: 'Prazo Área Técnica', value: formatDate(processo?.prazoAreaTecnica || '2024-05-24'), variant: 'success' },
+      { label: 'Responsável', value: processo?.responsavel || 'João da Silva' },
+      { label: 'Documento SEI - Resposta', value: processo?.documentoSEI || 'Não informado' },
+      { label: 'Situação do Processo', value: mapearSituacao(processo?.situacaoProcesso || 'em-andamento'), variant: 'info' },
+      { label: 'Prazo Final', value: formatDate(processo?.prazoFinal || '2024-05-10'), variant: 'danger' },
+      { label: 'Dias Restantes', value: diasAtraso, variant: 'danger' },
+      { label: 'Especial', value: 'Especial', isCheckbox: true, checked: Boolean(processo?.especial) }
+    ],
+    resumo: [
+      { label: 'Status', value: statusLabel, variant: diasRestantes < 0 ? 'danger' : 'neutral' },
+      { label: 'Diferença', value: diasAtraso, variant: diasRestantes < 0 ? 'danger' : 'info' },
+      { label: 'Prazo Final', value: formatDate(processo?.prazoFinal || '2024-05-10'), variant: 'neutral' },
+      { label: 'Dias Restantes', value: diasAtraso, variant: diasRestantes < 0 ? 'danger' : 'info' },
+      { label: 'Situação', value: mapearSituacao(processo?.situacaoProcesso || 'em-andamento'), variant: 'info' }
+    ]
+  };
+};
+
 const DetalhesProcesso: React.FC = () => {
   const [abaAtiva, setAbaAtiva] = useState<AbaAtiva>('dados');
-  const processo = processoDetalheMock;
+  const { processoSelecionado, definirProcessoSelecionado, navegarPara } = useApp();
+  const processo = construirProcessoDetalhe(processoSelecionado);
+
+  const voltarParaPendencias = (): void => {
+    definirProcessoSelecionado(null, null);
+    navegarPara('pendencias');
+  };
 
   return (
     <section className="detalhes-processo-page" aria-label="Detalhes do Processo">
@@ -92,13 +137,12 @@ const DetalhesProcesso: React.FC = () => {
         </div>
 
         <div className="detalhes-processo__actions">
-          <button type="button" className="detalhes-processo__button detalhes-processo__button--secondary">
-            <Edit3 size={16} />
-            Editar
-          </button>
-          <button type="button" className="detalhes-processo__button detalhes-processo__button--outline">
-            Ações
-            <ChevronDown size={16} />
+          <button
+            type="button"
+            className="detalhes-processo__button detalhes-processo__button--secondary"
+            onClick={voltarParaPendencias}
+          >
+            Voltar
           </button>
         </div>
       </div>
