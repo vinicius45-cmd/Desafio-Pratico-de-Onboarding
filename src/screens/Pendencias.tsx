@@ -177,13 +177,13 @@ const Pendencias: React.FC = () => {
   };
 
   return (
-    <div className="pendencias-container">
+    <div className="pendencias-container" onClick={handleContainerClick}>
       <header className="pendencias-header">
         <h1>Pendências</h1>
         <p>Acompanhe todos os processos com pendências e prazos</p>
       </header>
 
-      <div className="kanban-board" onClick={handleContainerClick}>
+      <div className="kanban-board">
         {COLUNAS.map((coluna) => {
           const cards = DADOS_MOCKADOS[coluna.id] || [];
 
