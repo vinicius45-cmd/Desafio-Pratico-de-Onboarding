@@ -53,6 +53,16 @@ interface MenuAberto {
 
 type AcaoProcesso = 'editar' | 'visualizar';
 
+const mapearDestinatario = (setor: string): string => {
+  if (setor.includes('Obras')) return 'Suter';
+  if (setor.includes('Educação')) return 'Suop';
+  if (setor.includes('Administração')) return 'Sufisa';
+  if (setor.includes('Financeiro')) return 'Suag';
+  if (setor.includes('Saúde')) return 'Sutinf';
+  if (setor.includes('Planejamento')) return 'Suter';
+  return 'Suter';
+};
+
 const formatDateLocal = (value: Date): string => {
   const year = value.getFullYear();
   const month = String(value.getMonth() + 1).padStart(2, '0');
@@ -78,18 +88,18 @@ const construirProcessoMockado = (card: CardPendencia): FormCadastro => {
     processoINCRA: card.processoId,
     requerimento: `REQ-${card.processoId.replace(/[^0-9]/g, '').slice(0, 4)}`,
     assunto: card.titulo,
-    assuntoTipo: 'Ofício',
-    destinatario: card.setor,
-    solicitudesInformacao: ['Solicitação de documentação'],
+    assuntoTipo: card.status === 'para_assinatura' ? 'Memorando' : 'Ofício',
+    destinatario: mapearDestinatario(card.setor),
+    solicitudesInformacao: ['Solicitação de documentação', 'Análise complementar'],
     orgaoOrigem,
     dataEntrada: formatDateLocal(dataEntrada),
     prazoAreaTecnica: formatDateLocal(new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 2)),
     prazoFinal: formatDateLocal(prazoFinal),
-    situacaoProcesso: 'em-andamento',
-    responsavel: 'joao-silva',
-    documentoSEI: '',
+    situacaoProcesso: card.diasRestantes < 0 ? 'parado' : 'em-andamento',
+    responsavel: card.titulo.includes('Jurídico') ? 'maria-santos' : card.setor.includes('Administração') ? 'pedro-oliveira' : 'joao-silva',
+    documentoSEI: 'doc-001',
     especial: card.status === 'especiais',
-    filtroRespostas: false,
+    filtroRespostas: card.status === 'para_assinatura',
     observacao: `Processo aberto a partir da pendência ${card.titulo} no setor ${card.setor}.`,
   };
 };
@@ -102,22 +112,32 @@ const Card: React.FC<{ card: CardPendencia; onMenuClick: (cardId: string) => voi
 }) => {
   const diasClass = card.diasRestantes < 0 ? 'card-dias--atrasado' : card.diasRestantes === 0 ? 'card-dias--hoje' : 'card-dias--ok';
 
+  const handleMenuButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onMenuClick(card.id);
+  };
+
+  const handleActionClick = (event: React.MouseEvent<HTMLButtonElement>, modo: AcaoProcesso) => {
+    event.stopPropagation();
+    onAction(card, modo);
+  };
+
   return (
     <div className="kanban-card">
       <div className="card-header">
         <button
           aria-label="Menu"
           className="card-menu-btn"
-          onClick={() => onMenuClick(card.id)}
+          onClick={handleMenuButtonClick}
           type="button"
         >
           <MoreVertical size={16} />
         </button>
 
         {menuAberto.cardId === card.id && (
-          <div className="card-menu-dropdown">
-            <button type="button" onClick={() => onAction(card, 'editar')}>Editar</button>
-            <button type="button" onClick={() => onAction(card, 'visualizar')}>Visualizar detalhes</button>
+          <div className="card-menu-dropdown" onClick={(event) => event.stopPropagation()}>
+            <button type="button" onClick={(event) => handleActionClick(event, 'editar')}>Editar</button>
+            <button type="button" onClick={(event) => handleActionClick(event, 'visualizar')}>Visualizar detalhes</button>
           </div>
         )}
       </div>
@@ -149,6 +169,13 @@ const Pendencias: React.FC = () => {
     setMenuAberto({ cardId: null });
   };
 
+  const handleContainerClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest('.card-menu-dropdown')) {
+      return;
+    }
+    setMenuAberto({ cardId: null });
+  };
+
   return (
     <div className="pendencias-container">
       <header className="pendencias-header">
@@ -156,7 +183,7 @@ const Pendencias: React.FC = () => {
         <p>Acompanhe todos os processos com pendências e prazos</p>
       </header>
 
-      <div className="kanban-board">
+      <div className="kanban-board" onClick={handleContainerClick}>
         {COLUNAS.map((coluna) => {
           const cards = DADOS_MOCKADOS[coluna.id] || [];
 

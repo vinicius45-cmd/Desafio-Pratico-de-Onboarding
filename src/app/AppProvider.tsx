@@ -21,6 +21,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const navegarPara = (moduleId: string, subMenuId: string | null = null) => {
     setActiveModuleId(moduleId);
     setActiveSubMenuId(subMenuId);
+
+    if (typeof window !== 'undefined') {
+      window.history.pushState({ moduleId, subMenuId }, '', window.location.pathname);
+    }
     
     // Auto collapse sidebar on mobile after navigating
     if (window.innerWidth < 768) {
@@ -44,8 +48,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setSidebarOpen(false);
       }
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state as { moduleId?: string; subMenuId?: string | null } | null;
+      if (state?.moduleId) {
+        setActiveModuleId(state.moduleId);
+        setActiveSubMenuId(state.subMenuId ?? null);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      const initialState = window.history.state as { moduleId?: string; subMenuId?: string | null } | null;
+      if (initialState?.moduleId) {
+        setActiveModuleId(initialState.moduleId);
+        setActiveSubMenuId(initialState.subMenuId ?? null);
+      } else {
+        window.history.replaceState({ moduleId: activeModuleId, subMenuId: activeSubMenuId }, '', window.location.pathname);
+      }
+      window.addEventListener('resize', handleResize);
+      window.addEventListener('popstate', handlePopState);
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, []);
 
   return (
