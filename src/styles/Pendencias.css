@@ -200,6 +200,30 @@
   color: #000;
 }
 
+.pendencias-column--atrasado .column-titulo {
+  color: #ef5350;
+}
+
+.pendencias-column--vence-hoje .column-titulo {
+  color: #ff9800;
+}
+
+.pendencias-column--proximos .column-titulo {
+  color: #fbc02d;
+}
+
+.pendencias-column--assinatura .column-titulo {
+  color: #2196f3;
+}
+
+.pendencias-column--especiais .column-titulo {
+  color: #9c27b0;
+}
+
+.pendencias-column--orgaos-controle .column-titulo {
+  color: #000;
+}
+
 .pendencias-column--atrasado .column-cards {
   background-color: #fff0f0;
 }
@@ -234,14 +258,65 @@
   gap: 12px;
   padding: 12px;
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   background-color: transparent;
   border-radius: 0 0 8px 8px;
 }
 
-.column-cards::-webkit-scrollbar {
+.column-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+.pendencias-column.has-more-cards .column-cards {
+  justify-content: space-between;
+}
+
+.column-view-all-btn {
+  width: fit-content;
+  align-self: center;
+  margin-top: 0;
+}
+
+.column-view-all-btn.inline-center {
+  margin-top: 12px;
+}
+
+.column-view-all-btn.fixed-bottom {
+  margin-top: auto;
+}
+
+.pendencias-column.has-more-cards .kanban-card {
+  padding: 10px;
+}
+
+.pendencias-column.has-more-cards .card-titulo {
+  font-size: 14px;
+}
+
+.pendencias-column.has-more-cards .card-setor {
+  font-size: 11px;
+}
+
+.column-cards-list::-webkit-scrollbar {
   width: 6px;
+}
+
+.column-cards-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.column-cards-list::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 3px;
+}
+
+.column-cards-list::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
 }
 
 .column-cards::-webkit-scrollbar-track {
@@ -265,6 +340,25 @@
   color: #999;
   font-size: 13px;
   font-style: italic;
+}
+
+.column-view-all-btn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px;
+  border: none;
+  background-color: transparent;
+  color: #1976d2;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.column-view-all-btn:hover {
+  background-color: rgba(25, 118, 210, 0.08);
 }
 
 /* ============================================================================

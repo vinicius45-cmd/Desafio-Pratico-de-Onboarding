@@ -174,6 +174,11 @@ const Pendencias: React.FC = () => {
     setMenuAberto({ cardId: null });
   };
 
+  const handleViewAll = (colunaId: string): void => {
+    console.log(`Ver todos os processos do filtro: ${colunaId}`);
+    // Futuro: navegar para visualização completa do filtro
+  };
+
   const handleContainerClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest('.card-menu-dropdown')) {
       return;
@@ -191,29 +196,46 @@ const Pendencias: React.FC = () => {
       <div className="kanban-board">
         {COLUNAS.map((coluna) => {
           const cards = DADOS_MOCKADOS[coluna.id] || [];
+          const visibleCards = cards.length > 3 ? cards.slice(0, 3) : cards;
+          const hasMore = cards.length > 3;
 
           return (
-            <div key={coluna.id} className={`pendencias-column ${coluna.corClasse}`}>
+            <div
+              key={coluna.id}
+              className={`pendencias-column ${coluna.corClasse} ${hasMore ? 'has-more-cards' : ''}`}
+            >
               <div className="column-header">
                 <h2 className="column-titulo">{coluna.titulo}</h2>
                 <span className="column-contador">{cards.length}</span>
               </div>
 
               <div className="column-cards">
-                {cards.map((card) => (
-                  <Card
-                    key={card.id}
-                    card={card}
-                    onMenuClick={handleMenuClick}
-                    menuAberto={menuAberto}
-                    onAction={abrirProcesso}
-                  />
-                ))}
-              </div>
+                <div className="column-cards-list">
+                  {visibleCards.map((card) => (
+                    <Card
+                      key={card.id}
+                      card={card}
+                      onMenuClick={handleMenuClick}
+                      menuAberto={menuAberto}
+                      onAction={abrirProcesso}
+                    />
+                  ))}
 
-              {cards.length === 0 && (
-                <div className="column-empty">Nenhuma pendência</div>
-              )}
+                  {cards.length === 0 && (
+                    <div className="column-empty">Nenhuma pendência</div>
+                  )}
+                </div>
+
+                {(cards.length > 0 || hasMore) && (
+                  <button
+                    type="button"
+                    className={`column-view-all-btn ${hasMore ? 'fixed-bottom' : 'inline-center'}`}
+                    onClick={() => handleViewAll(coluna.id)}
+                  >
+                    Ver todos
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
