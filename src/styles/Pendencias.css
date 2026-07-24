@@ -105,6 +105,10 @@
   border-top-color: #9c27b0;
 }
 
+.pendencias-column--orgaos-controle {
+  border-top-color: #000;
+}
+
 /* ============================================================================
    COLUMN HEADER
    ============================================================================ */
@@ -118,6 +122,30 @@
   gap: 8px;
   background-color: #fafafa;
   flex-shrink: 0;
+}
+
+.pendencias-column--atrasado .column-header {
+  background-color: #fff0f0;
+}
+
+.pendencias-column--vence-hoje .column-header {
+  background-color: #fff6e1;
+}
+
+.pendencias-column--proximos .column-header {
+  background-color: #fffef0;
+}
+
+.pendencias-column--assinatura .column-header {
+  background-color: #e8f0ff;
+}
+
+.pendencias-column--especiais .column-header {
+  background-color: #f6e8ff;
+}
+
+.pendencias-column--orgaos-controle .column-header {
+  background-color: #f2f2f2;
 }
 
 .column-titulo {
@@ -167,6 +195,35 @@
   color: #9c27b0;
 }
 
+.pendencias-column--orgaos-controle .column-contador {
+  background-color: #f5f5f5;
+  color: #000;
+}
+
+.pendencias-column--atrasado .column-cards {
+  background-color: #fff0f0;
+}
+
+.pendencias-column--vence-hoje .column-cards {
+  background-color: #fff6e1;
+}
+
+.pendencias-column--proximos .column-cards {
+  background-color: #fffef0;
+}
+
+.pendencias-column--assinatura .column-cards {
+  background-color: #e8f0ff;
+}
+
+.pendencias-column--especiais .column-cards {
+  background-color: #f6e8ff;
+}
+
+.pendencias-column--orgaos-controle .column-cards {
+  background-color: #f2f2f2;
+}
+
 /* ============================================================================
    CARDS CONTAINER
    ============================================================================ */
@@ -179,6 +236,8 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  background-color: transparent;
+  border-radius: 0 0 8px 8px;
 }
 
 .column-cards::-webkit-scrollbar {
@@ -217,7 +276,7 @@
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  background-color: #fafafa;
+  background-color: #fff !important;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
   cursor: move;
@@ -226,9 +285,43 @@
 }
 
 .kanban-card:hover {
-  background-color: #fff;
+  background-color: #fff !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-color: #bbb;
+}
+
+.card--atrasado,
+.card--vence_hoje,
+.card--proximos_5_dias,
+.card--para_assinatura,
+.card--especiais,
+.card--orgaos_controle {
+  background-color: #fff !important;
+  border-color: #e0e0e0;
+}
+
+.card--atrasado {
+  border-color: #e0e0e0;
+}
+
+.card--vence_hoje {
+  border-color: #e0e0e0;
+}
+
+.card--proximos_5_dias {
+  border-color: #e0e0e0;
+}
+
+.card--para_assinatura {
+  border-color: #e0e0e0;
+}
+
+.card--especiais {
+  border-color: #e0e0e0;
+}
+
+.card--orgaos_controle {
+  border-color: #e0e0e0;
 }
 
 /* ============================================================================

@@ -16,7 +16,8 @@ const COLUNAS: ColumnConfig[] = [
   { id: 'vence_hoje', titulo: 'Vence Hoje', corHex: '#ff9800', corClasse: 'pendencias-column--vence-hoje' },
   { id: 'proximos_5_dias', titulo: 'Próximos 5 dias', corHex: '#fbc02d', corClasse: 'pendencias-column--proximos' },
   { id: 'para_assinatura', titulo: 'Para Assinatura', corHex: '#2196f3', corClasse: 'pendencias-column--assinatura' },
-  { id: 'especiais', titulo: 'Especiais', corHex: '#9c27b0', corClasse: 'pendencias-column--especiais' }
+  { id: 'especiais', titulo: 'Especiais', corHex: '#9c27b0', corClasse: 'pendencias-column--especiais' },
+  { id: 'orgaos_controle', titulo: 'Órgãos de Controle', corHex: '#000000', corClasse: 'pendencias-column--orgaos-controle' }
 ];
 
 // Dados mockados fortemente tipados
@@ -44,6 +45,10 @@ const DADOS_MOCKADOS: PendenciasKanban = {
   especiais: [
     { id: '13', processoId: '0008584/2024-66', titulo: 'Processo Especial', setor: 'Sec. de Protesto', diasRestantes: 15, status: 'especiais' },
     { id: '14', processoId: '0008584/2024-67', titulo: 'Processo Reservado', setor: 'Sec. de Governo', diasRestantes: 18, status: 'especiais' }
+  ],
+  orgaos_controle: [
+    { id: '15', processoId: '0009123/2024-88', titulo: 'Fiscalização de Contrato', setor: 'Sec. de Controle', diasRestantes: 8, status: 'orgaos_controle' },
+    { id: '16', processoId: '0009345/2024-90', titulo: 'Auditoria Interna', setor: 'Secretaria de Controle', diasRestantes: 12, status: 'orgaos_controle' }
   ]
 };
 
@@ -123,7 +128,7 @@ const Card: React.FC<{ card: CardPendencia; onMenuClick: (cardId: string) => voi
   };
 
   return (
-    <div className="kanban-card">
+    <div className={`kanban-card card--${card.status}`}>
       <div className="card-header">
         <button
           aria-label="Menu"
