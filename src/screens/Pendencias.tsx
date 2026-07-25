@@ -161,6 +161,7 @@ const Card: React.FC<{ card: CardPendencia; onMenuClick: (cardId: string) => voi
 const Pendencias: React.FC = () => {
   const { navegarPara, definirProcessoSelecionado } = useApp();
   const [menuAberto, setMenuAberto] = useState<MenuAberto>({ cardId: null });
+  const [colunasExpandidas, setColunasExpandidas] = useState<Record<string, boolean>>({});
 
   const handleMenuClick = (cardId: string): void => {
     setMenuAberto((prev) => ({
@@ -175,8 +176,10 @@ const Pendencias: React.FC = () => {
   };
 
   const handleViewAll = (colunaId: string): void => {
-    console.log(`Ver todos os processos do filtro: ${colunaId}`);
-    // Futuro: navegar para visualização completa do filtro
+    setColunasExpandidas((prev) => ({
+      ...prev,
+      [colunaId]: true
+    }));
   };
 
   const handleContainerClick = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -196,8 +199,10 @@ const Pendencias: React.FC = () => {
       <div className="kanban-board">
         {COLUNAS.map((coluna) => {
           const cards = DADOS_MOCKADOS[coluna.id] || [];
-          const visibleCards = cards.length > 3 ? cards.slice(0, 3) : cards;
+          const estaExpandida = colunasExpandidas[coluna.id] || false;
+          const visibleCards = !estaExpandida && cards.length > 3 ? cards.slice(0, 3) : cards;
           const hasMore = cards.length > 3;
+          const showViewAllButton = cards.length > 0 && !estaExpandida;
 
           return (
             <div
@@ -210,7 +215,7 @@ const Pendencias: React.FC = () => {
               </div>
 
               <div className="column-cards">
-                <div className="column-cards-list">
+                <div className={`column-cards-list ${estaExpandida ? 'is-expanded' : ''}`}>
                   {visibleCards.map((card) => (
                     <Card
                       key={card.id}
@@ -226,13 +231,13 @@ const Pendencias: React.FC = () => {
                   )}
                 </div>
 
-                {(cards.length > 0 || hasMore) && (
+                {showViewAllButton && (
                   <button
                     type="button"
-                    className={`column-view-all-btn ${hasMore ? 'fixed-bottom' : 'inline-center'}`}
+                    className="column-view-all-btn"
                     onClick={() => handleViewAll(coluna.id)}
                   >
-                    Ver todos
+                    Ver mais
                   </button>
                 )}
               </div>
