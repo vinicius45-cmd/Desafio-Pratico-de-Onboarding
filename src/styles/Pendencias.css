@@ -37,14 +37,13 @@
    ============================================================================ */
 
 .kanban-board {
-  display: flex;
-  gap: 20px;
+  position: relative;
   flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 12px;
   scroll-behavior: smooth;
-  align-items: flex-start;
+  min-height: 100%;
 }
 
 .kanban-board::-webkit-scrollbar {
@@ -70,7 +69,9 @@
    ============================================================================ */
 
 .pendencias-column {
-  flex: 0 0 320px;
+  position: absolute;
+  top: 0;
+  width: 320px;
   display: flex;
   flex-direction: column;
   align-self: flex-start;
@@ -78,11 +79,21 @@
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  transition: box-shadow 0.2s ease;
+  transition: left 220ms ease, box-shadow 0.2s ease, transform 220ms ease;
 }
 
 .pendencias-column:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.pendencias-column {
+  user-select: none;
+  cursor: grab;
+}
+
+.pendencias-column.is-dragging {
+  opacity: 0.6;
+  cursor: grabbing;
 }
 
 /* Cores das colunas */

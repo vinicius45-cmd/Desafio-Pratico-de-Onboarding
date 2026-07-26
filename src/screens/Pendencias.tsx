@@ -167,6 +167,9 @@ const Pendencias: React.FC = () => {
   const { navegarPara, definirProcessoSelecionado } = useApp();
   const [menuAberto, setMenuAberto] = useState<MenuAberto>({ cardId: null });
   const [colunasExpandidas, setColunasExpandidas] = useState<Record<string, boolean>>({});
+  const [ordemColunas, setOrdemColunas] = useState<string[]>(() => COLUNAS.map((coluna) => coluna.id));
+  const [colunaArrastadaId, setColunaArrastadaId] = useState<string | null>(null);
+  const [colunaDestinoId, setColunaDestinoId] = useState<string | null>(null);
 
   const handleMenuClick = (cardId: string): void => {
     setMenuAberto((prev) => ({
@@ -194,15 +197,62 @@ const Pendencias: React.FC = () => {
     setMenuAberto({ cardId: null });
   };
 
+  const colunasOrdenadas = ordemColunas
+    .map((colunaId) => COLUNAS.find((coluna) => coluna.id === colunaId))
+    .filter((coluna): coluna is ColumnConfig => Boolean(coluna));
+
+  const handleDragStart = (colunaId: string): void => {
+    setColunaArrastadaId(colunaId);
+  };
+
+  const moverColuna = (ids: string[], fromId: string, toId: string): string[] => {
+    const next = [...ids];
+    const fromIndex = next.indexOf(fromId);
+    const toIndex = next.indexOf(toId);
+
+    if (fromIndex < 0 || toIndex < 0 || fromIndex === toIndex) {
+      return ids;
+    }
+
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    return next;
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>, colunaId: string): void => {
+    event.preventDefault();
+    if (colunaArrastadaId && colunaArrastadaId !== colunaId) {
+      setOrdemColunas((prev) => moverColuna(prev, colunaArrastadaId, colunaId));
+      setColunaDestinoId(colunaId);
+    }
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>, colunaId: string): void => {
+    event.preventDefault();
+    if (!colunaArrastadaId || colunaArrastadaId === colunaId) {
+      setColunaArrastadaId(null);
+      setColunaDestinoId(null);
+      return;
+    }
+
+    setOrdemColunas((prev) => moverColuna(prev, colunaArrastadaId, colunaId));
+    setColunaArrastadaId(null);
+    setColunaDestinoId(null);
+  };
+
+  const handleDragEnd = (): void => {
+    setColunaArrastadaId(null);
+    setColunaDestinoId(null);
+  };
+
   return (
     <div className="pendencias-container" onClick={handleContainerClick}>
       <header className="pendencias-header">
         <h1>Pendências</h1>
-        <p>Acompanhe todos os processos com pendências e prazos</p>
       </header>
 
       <div className="kanban-board">
-        {COLUNAS.map((coluna) => {
+        {colunasOrdenadas.map((coluna, index) => {
           const cards = DADOS_MOCKADOS[coluna.id] || [];
           const estaExpandida = colunasExpandidas[coluna.id] || false;
           const visibleCards = !estaExpandida && cards.length > 3 ? cards.slice(0, 3) : cards;
@@ -212,7 +262,13 @@ const Pendencias: React.FC = () => {
           return (
             <div
               key={coluna.id}
-              className={`pendencias-column ${coluna.corClasse} ${hasMore ? 'has-more-cards' : ''}`}
+              draggable
+              onDragStart={() => handleDragStart(coluna.id)}
+              onDragOver={(event) => handleDragOver(event, coluna.id)}
+              onDrop={(event) => handleDrop(event, coluna.id)}
+              onDragEnd={handleDragEnd}
+              className={`pendencias-column ${coluna.corClasse} ${hasMore ? 'has-more-cards' : ''} ${colunaArrastadaId === coluna.id ? 'is-dragging' : ''} ${colunaDestinoId === coluna.id ? 'is-drop-target' : ''}`}
+              style={{ left: `${index * 340}px` }}
             >
               <div className="column-header">
                 <h2 className="column-titulo">{coluna.titulo}</h2>
