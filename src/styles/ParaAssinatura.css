@@ -229,6 +229,8 @@
   background: #ffffff;
   border: 1px solid rgba(228, 232, 237, 0.88);
   border-radius: 18px;
+  overflow: visible;
+  position: relative;
 }
 
 .para-assinatura__table tbody tr td {
@@ -267,7 +269,7 @@
 
 .para-assinatura__signed-row {
   background: #f8fff9 !important;
-  opacity: 0.9;
+  opacity: 0.95;
 }
 
 .para-assinatura__primary-action {
@@ -305,6 +307,8 @@
 
 .para-assinatura__action-menu {
   position: relative;
+  isolation: isolate;
+  z-index: 2;
 }
 
 .para-assinatura__more-button {
@@ -318,7 +322,9 @@
   height: 40px;
   justify-content: center;
   padding: 0 12px;
+  position: relative;
   transition: background-color 0.18s ease, transform 0.18s ease;
+  z-index: 1;
 }
 
 .para-assinatura__more-button:hover {
@@ -331,17 +337,15 @@
   background: #ffffff;
   border: 1px solid var(--semob-border);
   border-radius: 14px;
-  box-shadow: 0 15px 40px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.22);
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 150px;
-  overflow: hidden;
+  overflow: visible;
   padding: 8px;
-  position: absolute;
-  right: 0;
-  top: calc(100% + 6px);
-  z-index: 6;
+  position: fixed;
+  z-index: 2147483647;
 }
 
 .para-assinatura__action-dropdown button {

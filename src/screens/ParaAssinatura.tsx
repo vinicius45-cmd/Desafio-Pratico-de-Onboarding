@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle2, FileText, Filter, MoreVertical, PenTool, Search, XCircle } from 'lucide-react';
 import { useApp } from '../app/AppProvider';
 import { FormCadastro } from '../types';
@@ -77,6 +78,7 @@ const ParaAssinatura: React.FC = () => {
   const [documentosAssinados, setDocumentosAssinados] = useState<DocumentoAssinatura[]>([]);
   const [mostrarAssinados, setMostrarAssinados] = useState<boolean>(false);
   const [menuAbertoId, setMenuAbertoId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [documentoSelecionado, setDocumentoSelecionado] = useState<DocumentoAssinatura | null>(null);
   const [mensagemAcao, setMensagemAcao] = useState<string | null>(null);
 
@@ -105,6 +107,7 @@ const ParaAssinatura: React.FC = () => {
 
       if (!clicouDentroDoMenuDeAcoes) {
         setMenuAbertoId(null);
+        setMenuPosition(null);
       }
 
       if (!clicouDentroDoFiltro) {
@@ -123,13 +126,21 @@ const ParaAssinatura: React.FC = () => {
     setDocumentos((current) => current.filter((item) => item.id !== documento.id));
     setDocumentosAssinados((current) => [...current, documento]);
     setMenuAbertoId(null);
+    setMenuPosition(null);
     setDocumentoSelecionado(null);
     setMensagemAcao(`Documento "${documento.documento}" foi assinado com sucesso.`);
   };
 
   const handleAbrirMenuAcoes = (documentoId: string, event: React.MouseEvent<HTMLButtonElement>): void => {
     event.stopPropagation();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const dropdownWidth = 160;
+
     setMenuAbertoId((current) => (current === documentoId ? null : documentoId));
+    setMenuPosition({
+      top: rect.bottom + 6,
+      left: Math.max(12, Math.min(rect.right - dropdownWidth, window.innerWidth - dropdownWidth - 12))
+    });
     setMensagemAcao(null);
   };
 
@@ -164,6 +175,7 @@ const ParaAssinatura: React.FC = () => {
     definirProcessoSelecionado(construirProcessoDetalhe(documento), 'visualizar');
     navegarPara('meus-processos');
     setMenuAbertoId(null);
+    setMenuPosition(null);
     setDocumentoSelecionado(null);
     setMensagemAcao(null);
   };
@@ -172,6 +184,7 @@ const ParaAssinatura: React.FC = () => {
     setDocumentos((current) => current.filter((item) => item.id !== documento.id));
     setDocumentosAssinados((current) => current.filter((item) => item.id !== documento.id));
     setMenuAbertoId(null);
+    setMenuPosition(null);
     setDocumentoSelecionado(null);
     setMensagemAcao(`Documento "${documento.documento}" foi recusado e removido da fila.`);
   };
@@ -335,8 +348,13 @@ const ParaAssinatura: React.FC = () => {
                           >
                             <MoreVertical size={16} />
                           </button>
-                          {menuAbertoId === documento.id && (
-                            <div className="para-assinatura__action-dropdown" role="menu">
+                          {menuAbertoId === documento.id && menuPosition && createPortal(
+                            <div
+                              className="para-assinatura__action-dropdown"
+                              role="menu"
+                              style={{ top: `${menuPosition.top}px`, left: `${menuPosition.left}px` }}
+                              onClick={(event) => event.stopPropagation()}
+                            >
                               <button type="button" role="menuitem" onClick={() => handleVisualizarDetalhes(documento)}>
                                 <FileText size={14} />
                                 Detalhes
@@ -347,7 +365,8 @@ const ParaAssinatura: React.FC = () => {
                                   Rejeitar
                                 </button>
                               )}
-                            </div>
+                            </div>,
+                            document.body
                           )}
                         </div>
                       </td>
