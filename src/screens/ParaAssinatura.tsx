@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, FileText, Filter, MoreVertical, PenTool, Search, XCircle } from 'lucide-react';
+import { useApp } from '../app/AppProvider';
+import { FormCadastro } from '../types';
 import '../styles/ParaAssinatura.css';
 
 type CriticidadeDocumento = 'Atrasado' | 'Urgente' | 'No Prazo';
@@ -67,6 +69,7 @@ const badgeStyles: Record<CriticidadeDocumento, string> = {
 const filtrosRapidos: FiltroRapido[] = ['Todos', 'Atrasado', 'Urgente', 'No Prazo'];
 
 const ParaAssinatura: React.FC = () => {
+  const { navegarPara, definirProcessoSelecionado } = useApp();
   const [searchValue, setSearchValue] = useState<string>('');
   const [filtroSelecionado, setFiltroSelecionado] = useState<FiltroRapido>('Todos');
   const [filterListOpen, setFilterListOpen] = useState<boolean>(false);
@@ -130,9 +133,39 @@ const ParaAssinatura: React.FC = () => {
     setMensagemAcao(null);
   };
 
+  const construirProcessoDetalhe = (documento: DocumentoAssinatura): FormCadastro => {
+    const orgaoOrigem = documento.origemSetor.includes('Saúde')
+      ? 'secretaria-saude'
+      : documento.origemSetor.includes('Educação')
+        ? 'secretaria-educacao'
+        : 'secretaria-fazenda';
+
+    return {
+      processoINCRA: documento.processoSei,
+      requerimento: `REQ-${documento.processoSei.replace(/[^0-9]/g, '').slice(0, 4)}`,
+      assunto: documento.documento,
+      assuntoTipo: 'Memorando',
+      destinatario: 'Suter',
+      solicitudesInformacao: ['Solicitação de documentação', 'Análise complementar'],
+      orgaoOrigem,
+      dataEntrada: '2024-05-10',
+      prazoAreaTecnica: '2024-05-24',
+      prazoFinal: '2024-05-24',
+      situacaoProcesso: 'em-andamento',
+      responsavel: 'joao-silva',
+      documentoSEI: documento.documento,
+      especial: false,
+      filtroRespostas: false,
+      observacao: `Documento para assinatura ${documento.documento} do processo ${documento.processoSei}.`
+    };
+  };
+
   const handleVisualizarDetalhes = (documento: DocumentoAssinatura): void => {
-    setDocumentoSelecionado(documento);
+    definirProcessoSelecionado(construirProcessoDetalhe(documento), 'visualizar');
+    navegarPara('meus-processos');
     setMenuAbertoId(null);
+    setDocumentoSelecionado(null);
+    setMensagemAcao(null);
   };
 
   const handleRejeitarDocumento = (documento: DocumentoAssinatura): void => {
