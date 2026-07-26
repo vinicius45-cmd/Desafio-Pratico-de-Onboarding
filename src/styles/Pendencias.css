@@ -77,7 +77,6 @@
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  border-top: 4px solid #ccc;
   overflow: hidden;
   transition: box-shadow 0.2s ease;
 }
@@ -88,27 +87,27 @@
 
 /* Cores das colunas */
 .pendencias-column--atrasado {
-  border-top-color: #ef5350;
+  border-top: none;
 }
 
 .pendencias-column--vence-hoje {
-  border-top-color: #ff9800;
+  border-top: none;
 }
 
 .pendencias-column--proximos {
-  border-top-color: #fbc02d;
+  border-top: none;
 }
 
 .pendencias-column--assinatura {
-  border-top-color: #2196f3;
+  border-top: none;
 }
 
 .pendencias-column--especiais {
-  border-top-color: #9c27b0;
+  border-top: none;
 }
 
 .pendencias-column--orgaos-controle {
-  border-top-color: #000;
+  border-top: none;
 }
 
 /* ============================================================================
@@ -138,11 +137,11 @@
 }
 
 .pendencias-column--assinatura .column-header {
-  background-color: #e8f0ff;
+  background-color: #f2f9fc;
 }
 
 .pendencias-column--especiais .column-header {
-  background-color: #f6e8ff;
+  background-color: #f8f8fb;
 }
 
 .pendencias-column--orgaos-controle .column-header {
@@ -187,13 +186,13 @@
 }
 
 .pendencias-column--assinatura .column-contador {
-  background-color: #e3f2fd;
-  color: #2196f3;
+  background-color: #f2f9fc;
+  color: #2f69b5;
 }
 
 .pendencias-column--especiais .column-contador {
-  background-color: #f3e5f5;
-  color: #9c27b0;
+  background-color: #f8f8fb;
+  color: #7F00FF;
 }
 
 .pendencias-column--orgaos-controle .column-contador {
@@ -214,11 +213,11 @@
 }
 
 .pendencias-column--assinatura .column-titulo {
-  color: #2196f3;
+  color: #2f69b5;
 }
 
 .pendencias-column--especiais .column-titulo {
-  color: #9c27b0;
+  color: #7F00FF;
 }
 
 .pendencias-column--orgaos-controle .column-titulo {
@@ -238,11 +237,11 @@
 }
 
 .pendencias-column--assinatura .column-cards {
-  background-color: #e8f0ff;
+  background-color: #f2f9fc;
 }
 
 .pendencias-column--especiais .column-cards {
-  background-color: #f6e8ff;
+  background-color: #f8f8fb;
 }
 
 .pendencias-column--orgaos-controle .column-cards {

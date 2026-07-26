@@ -16,7 +16,7 @@ const COLUNAS: ColumnConfig[] = [
   { id: 'vence_hoje', titulo: 'Vence Hoje', corHex: '#ff9800', corClasse: 'pendencias-column--vence-hoje' },
   { id: 'proximos_5_dias', titulo: 'Próximos 5 dias', corHex: '#fbc02d', corClasse: 'pendencias-column--proximos' },
   { id: 'para_assinatura', titulo: 'Para Assinatura', corHex: '#2196f3', corClasse: 'pendencias-column--assinatura' },
-  { id: 'especiais', titulo: 'Especiais', corHex: '#9c27b0', corClasse: 'pendencias-column--especiais' },
+  { id: 'especiais', titulo: 'Especiais', corHex: '#7F00FF', corClasse: 'pendencias-column--especiais' },
   { id: 'orgaos_controle', titulo: 'Órgãos de Controle', corHex: '#000000', corClasse: 'pendencias-column--orgaos-controle' }
 ];
 
@@ -237,7 +237,7 @@ const Pendencias: React.FC = () => {
                     className="column-view-all-btn"
                     onClick={() => handleViewAll(coluna.id)}
                   >
-                    Ver mais
+                    Ver todos
                   </button>
                 )}
               </div>
