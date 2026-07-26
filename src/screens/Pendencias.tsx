@@ -17,7 +17,7 @@ const COLUNAS: ColumnConfig[] = [
   { id: 'proximos_5_dias', titulo: 'Próximos 5 dias', corHex: '#fbc02d', corClasse: 'pendencias-column--proximos' },
   { id: 'para_assinatura', titulo: 'Para Assinatura', corHex: '#2196f3', corClasse: 'pendencias-column--assinatura' },
   { id: 'especiais', titulo: 'Especiais', corHex: '#7F00FF', corClasse: 'pendencias-column--especiais' },
-  { id: 'orgaos_controle', titulo: 'Órgãos de Controle', corHex: '#000000', corClasse: 'pendencias-column--orgaos-controle' }
+  { id: 'orgaos_controle', titulo: 'Orgãos de Controle', corHex: '#000000', corClasse: 'pendencias-column--orgaos-controle' }
 ];
 
 // Dados mockados fortemente tipados
@@ -115,7 +115,12 @@ const Card: React.FC<{ card: CardPendencia; onMenuClick: (cardId: string) => voi
   menuAberto,
   onAction
 }) => {
-  const diasClass = card.diasRestantes < 0 ? 'card-dias--atrasado' : card.diasRestantes === 0 ? 'card-dias--hoje' : 'card-dias--ok';
+  const diasClass = card.diasRestantes < 0
+    ? 'card-dias--atrasado'
+    : card.diasRestantes === 0
+      ? 'card-dias--hoje'
+      : 'card-dias--ok';
+  const statusClass = `card-status-${card.status}`;
 
   const handleMenuButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -151,8 +156,8 @@ const Card: React.FC<{ card: CardPendencia; onMenuClick: (cardId: string) => voi
       <div className="card-titulo">{card.titulo}</div>
       <div className="card-setor">{card.setor}</div>
 
-      <div className={`card-dias ${diasClass}`}>
-        {Math.abs(card.diasRestantes)} {card.diasRestantes === 1 || card.diasRestantes === -1 ? 'dia' : 'dias'}
+      <div className={`card-dias ${diasClass} ${statusClass}`}>
+        {card.status === 'atrasado' ? '-' : ''}{Math.abs(card.diasRestantes)} {card.diasRestantes === 1 || card.diasRestantes === -1 ? 'dia' : 'dias'}
       </div>
     </div>
   );
