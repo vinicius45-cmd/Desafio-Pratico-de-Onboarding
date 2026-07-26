@@ -97,8 +97,15 @@ const ParaAssinatura: React.FC = () => {
   useEffect(() => {
     const fecharMenuAoClicarFora = (event: MouseEvent) => {
       const alvo = event.target as HTMLElement;
-      if (!alvo.closest('.para-assinatura__action-menu')) {
+      const clicouDentroDoMenuDeAcoes = alvo.closest('.para-assinatura__action-menu');
+      const clicouDentroDoFiltro = alvo.closest('.para-assinatura__filter-dropdown');
+
+      if (!clicouDentroDoMenuDeAcoes) {
         setMenuAbertoId(null);
+      }
+
+      if (!clicouDentroDoFiltro) {
+        setFilterListOpen(false);
       }
     };
 
