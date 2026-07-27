@@ -5,7 +5,7 @@ import { useApp } from '../app/AppProvider';
 import { FormCadastro } from '../types';
 import '../styles/ParaAssinatura.css';
 
-type CriticidadeDocumento = 'Atrasado' | 'Urgente' | 'No Prazo';
+type CriticidadeDocumento = 'Atrasado' | 'Vence Hoje' | 'No Prazo';
 
 type FiltroRapido = 'Todos' | CriticidadeDocumento;
 
@@ -15,7 +15,8 @@ interface DocumentoAssinatura {
   processoSei: string;
   documento: string;
   origemSetor: string;
-  dataEnvio: string;
+  dataEntrada: string;
+  prazoFinal: string;
 }
 
 const documentosMock: DocumentoAssinatura[] = [
@@ -25,15 +26,17 @@ const documentosMock: DocumentoAssinatura[] = [
     processoSei: '0004321/2024-01',
     documento: 'Minuta de Resposta',
     origemSetor: 'Secretaria de Planejamento',
-    dataEnvio: '07/05/2024'
+    dataEntrada: '27/04/2024',
+    prazoFinal: '03/05/2024'
   },
   {
     id: '2',
-    criticidade: 'Urgente',
+    criticidade: 'Vence Hoje',
     processoSei: '0009876/2024-09',
     documento: 'Despacho Decisório',
     origemSetor: 'Secretaria de Saúde',
-    dataEnvio: '09/05/2024'
+    dataEntrada: '05/05/2024',
+    prazoFinal: '09/05/2024'
   },
   {
     id: '3',
@@ -41,7 +44,8 @@ const documentosMock: DocumentoAssinatura[] = [
     processoSei: '0001234/2024-10',
     documento: 'Ofício de Notificação',
     origemSetor: 'Secretaria de Educação',
-    dataEnvio: '10/05/2024'
+    dataEntrada: '10/05/2024',
+    prazoFinal: '18/05/2024'
   },
   {
     id: '4',
@@ -49,25 +53,62 @@ const documentosMock: DocumentoAssinatura[] = [
     processoSei: '0001122/2024-12',
     documento: 'Minuta de Resposta',
     origemSetor: 'Secretaria de Obras',
-    dataEnvio: '11/05/2024'
+    dataEntrada: '11/05/2024',
+    prazoFinal: '20/05/2024'
   },
   {
     id: '5',
-    criticidade: 'Urgente',
+    criticidade: 'Vence Hoje',
     processoSei: '0002233/2024-14',
     documento: 'Despacho Decisório',
     origemSetor: 'Secretaria de Finanças',
-    dataEnvio: '12/05/2024'
+    dataEntrada: '08/05/2024',
+    prazoFinal: '12/05/2024'
   }
 ];
 
 const badgeStyles: Record<CriticidadeDocumento, string> = {
   Atrasado: 'para-assinatura__badge--danger',
-  Urgente: 'para-assinatura__badge--warning',
+  'Vence Hoje': 'para-assinatura__badge--warning',
   'No Prazo': 'para-assinatura__badge--success'
 };
 
-const filtrosRapidos: FiltroRapido[] = ['Todos', 'Atrasado', 'Urgente', 'No Prazo'];
+const filtrosRapidos: FiltroRapido[] = ['Todos', 'Atrasado', 'Vence Hoje', 'No Prazo'];
+
+const formatDatePtBR = (value: Date): string => {
+  const day = String(value.getDate()).padStart(2, '0');
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const year = value.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+const criarHoje = (): Date => {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0, 0);
+  return hoje;
+};
+
+const calcularDataEntrada = (hoje: Date, criticidade: CriticidadeDocumento): Date => {
+  const dataEntrada = new Date(hoje);
+  dataEntrada.setDate(hoje.getDate() - 3);
+  return dataEntrada;
+};
+
+const calcularPrazoFinalDocumento = (hoje: Date, criticidade: CriticidadeDocumento): Date => {
+  const prazoFinal = new Date(hoje);
+
+  if (criticidade === 'Vence Hoje') {
+    return prazoFinal;
+  }
+
+  if (criticidade === 'No Prazo') {
+    prazoFinal.setDate(hoje.getDate() + 6);
+    return prazoFinal;
+  }
+
+  prazoFinal.setDate(hoje.getDate() - 1);
+  return prazoFinal;
+};
 
 const ParaAssinatura: React.FC = () => {
   const { navegarPara, definirProcessoSelecionado } = useApp();
@@ -81,9 +122,22 @@ const ParaAssinatura: React.FC = () => {
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [documentoSelecionado, setDocumentoSelecionado] = useState<DocumentoAssinatura | null>(null);
   const [mensagemAcao, setMensagemAcao] = useState<string | null>(null);
+  const [hoje, setHoje] = useState<Date>(criarHoje);
+
+  const documentosComDatas = useMemo(() => documentos.map((documento) => ({
+    ...documento,
+    dataEntrada: formatDatePtBR(calcularDataEntrada(hoje, documento.criticidade)),
+    prazoFinal: formatDatePtBR(calcularPrazoFinalDocumento(hoje, documento.criticidade))
+  })), [documentos, hoje]);
+
+  const documentosAssinadosComDatas = useMemo(() => documentosAssinados.map((documento) => ({
+    ...documento,
+    dataEntrada: formatDatePtBR(calcularDataEntrada(hoje, documento.criticidade)),
+    prazoFinal: formatDatePtBR(calcularPrazoFinalDocumento(hoje, documento.criticidade))
+  })), [documentosAssinados, hoje]);
 
   const documentosFiltrados = useMemo(() => {
-    const documentosVisiveis = mostrarAssinados ? [...documentos, ...documentosAssinados] : documentos;
+    const documentosVisiveis = mostrarAssinados ? [...documentosComDatas, ...documentosAssinadosComDatas] : documentosComDatas;
     const query = searchValue.trim().toLowerCase();
 
     return documentosVisiveis.filter((doc) => {
@@ -92,12 +146,12 @@ const ParaAssinatura: React.FC = () => {
         return atendeFiltro;
       }
 
-      const atendeBusca = [doc.processoSei, doc.documento, doc.origemSetor, doc.dataEnvio]
+      const atendeBusca = [doc.processoSei, doc.documento, doc.origemSetor, doc.dataEntrada, doc.prazoFinal]
         .some((campo) => campo.toLowerCase().includes(query));
 
       return atendeFiltro && atendeBusca;
     });
-  }, [documentos, documentosAssinados, filtroSelecionado, mostrarAssinados, searchValue]);
+  }, [documentosAssinadosComDatas, documentosComDatas, filtroSelecionado, mostrarAssinados, searchValue]);
 
   useEffect(() => {
     const fecharMenuAoClicarFora = (event: MouseEvent) => {
@@ -131,6 +185,21 @@ const ParaAssinatura: React.FC = () => {
     setMensagemAcao(`Documento "${documento.documento}" foi assinado com sucesso.`);
   };
 
+  useEffect(() => {
+    const proximoDia = new Date(hoje);
+    proximoDia.setDate(proximoDia.getDate() + 1);
+    proximoDia.setHours(0, 0, 0, 0, 0);
+
+    const msAteMeiaNoite = proximoDia.getTime() - Date.now();
+    const timer = window.setTimeout(() => {
+      setHoje(criarHoje());
+    }, msAteMeiaNoite);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [hoje]);
+
   const handleAbrirMenuAcoes = (documentoId: string, event: React.MouseEvent<HTMLButtonElement>): void => {
     event.stopPropagation();
     const rect = event.currentTarget.getBoundingClientRect();
@@ -159,9 +228,9 @@ const ParaAssinatura: React.FC = () => {
       destinatario: 'Suter',
       solicitudesInformacao: ['Solicitação de documentação', 'Análise complementar'],
       orgaoOrigem,
-      dataEntrada: '2024-05-10',
-      prazoAreaTecnica: '2024-05-24',
-      prazoFinal: '2024-05-24',
+      dataEntrada: documento.dataEntrada || '2024-05-10',
+      prazoAreaTecnica: documento.dataEntrada || '2024-05-10',
+      prazoFinal: documento.prazoFinal || '2024-05-10',
       situacaoProcesso: 'em-andamento',
       responsavel: 'joao-silva',
       documentoSEI: documento.documento,
@@ -294,7 +363,8 @@ const ParaAssinatura: React.FC = () => {
                 <th>Processo SEI Nº</th>
                 <th>Documento</th>
                 <th>Origem/Setor</th>
-                <th>Data de Envio</th>
+                <th>Data de Entrada</th>
+                <th>Prazo Final</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -321,7 +391,8 @@ const ParaAssinatura: React.FC = () => {
                       </td>
                       <td>{documento.documento}</td>
                       <td>{documento.origemSetor}</td>
-                      <td>{documento.dataEnvio}</td>
+                      <td>{documento.dataEntrada}</td>
+                      <td>{documento.prazoFinal}</td>
                       <td className="para-assinatura__actions-cell">
                         {documentoJaAssinado ? (
                           <button type="button" className="para-assinatura__primary-action para-assinatura__primary-action--signed" disabled>

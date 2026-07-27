@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MoreVertical } from 'lucide-react';
 import { useApp } from '../app/AppProvider';
 import { CardPendencia, FormCadastro, PendenciasKanban } from '../types';
@@ -75,13 +75,41 @@ const formatDateLocal = (value: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-const construirProcessoMockado = (card: CardPendencia): FormCadastro => {
-  const hoje = new Date();
+const criarDataInicio = (hoje: Date): Date => {
   const dataEntrada = new Date(hoje);
   dataEntrada.setDate(hoje.getDate() - 3);
+  return dataEntrada;
+};
 
+const calcularPrazoFinal = (card: CardPendencia, hoje: Date): Date => {
   const prazoFinal = new Date(hoje);
-  prazoFinal.setDate(hoje.getDate() + Math.max(5, card.diasRestantes + 8));
+
+  if (card.status === 'vence_hoje') {
+    return prazoFinal;
+  }
+
+  if (card.status === 'atrasado') {
+    prazoFinal.setDate(hoje.getDate() + card.diasRestantes);
+    return prazoFinal;
+  }
+
+  if (card.status === 'proximos_5_dias' || card.status === 'para_assinatura' || card.status === 'especiais' || card.status === 'orgaos_controle') {
+    prazoFinal.setDate(hoje.getDate() + card.diasRestantes);
+    return prazoFinal;
+  }
+
+  // Caso futuro para um status No Prazo
+  if ((card as any).status === 'no_prazo') {
+    prazoFinal.setDate(hoje.getDate() + 6);
+    return prazoFinal;
+  }
+
+  return prazoFinal;
+};
+
+const construirProcessoMockado = (card: CardPendencia, hoje: Date): FormCadastro => {
+  const dataEntrada = criarDataInicio(hoje);
+  const prazoFinal = calcularPrazoFinal(card, hoje);
 
   const orgaoOrigem = card.setor.includes('Saúde')
     ? 'secretaria-saude'
@@ -170,6 +198,11 @@ const Pendencias: React.FC = () => {
   const [ordemColunas, setOrdemColunas] = useState<string[]>(() => COLUNAS.map((coluna) => coluna.id));
   const [colunaArrastadaId, setColunaArrastadaId] = useState<string | null>(null);
   const [colunaDestinoId, setColunaDestinoId] = useState<string | null>(null);
+  const [hoje, setHoje] = useState<Date>(() => {
+    const agora = new Date();
+    agora.setHours(0, 0, 0, 0, 0);
+    return agora;
+  });
 
   const handleMenuClick = (cardId: string): void => {
     setMenuAberto((prev) => ({
@@ -178,10 +211,27 @@ const Pendencias: React.FC = () => {
   };
 
   const abrirProcesso = (card: CardPendencia, modo: AcaoProcesso): void => {
-    definirProcessoSelecionado(construirProcessoMockado(card), modo);
+    definirProcessoSelecionado(construirProcessoMockado(card, hoje), modo);
     navegarPara(modo === 'editar' ? 'cadastro-processo' : 'meus-processos');
     setMenuAberto({ cardId: null });
   };
+
+  useEffect(() => {
+    const proximoDia = new Date(hoje);
+    proximoDia.setDate(proximoDia.getDate() + 1);
+    proximoDia.setHours(0, 0, 0, 0, 0);
+
+    const msAteMeiaNoite = proximoDia.getTime() - Date.now();
+    const timer = window.setTimeout(() => {
+      const novaData = new Date();
+      novaData.setHours(0, 0, 0, 0, 0);
+      setHoje(novaData);
+    }, msAteMeiaNoite);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [hoje]);
 
   const handleViewAll = (colunaId: string): void => {
     setColunasExpandidas((prev) => ({
