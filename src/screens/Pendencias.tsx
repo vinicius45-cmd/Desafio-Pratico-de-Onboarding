@@ -251,7 +251,11 @@ const Pendencias: React.FC = () => {
     .map((colunaId) => COLUNAS.find((coluna) => coluna.id === colunaId))
     .filter((coluna): coluna is ColumnConfig => Boolean(coluna));
 
-  const handleDragStart = (colunaId: string): void => {
+  const handleDragStart = (event: React.DragEvent<HTMLDivElement>, colunaId: string): void => {
+    const img = new Image();
+    img.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiPjwvc3ZnPg==';
+    event.dataTransfer.setDragImage(img, 0, 0);
+    event.dataTransfer.effectAllowed = 'move';
     setColunaArrastadaId(colunaId);
   };
 
@@ -313,7 +317,7 @@ const Pendencias: React.FC = () => {
             <div
               key={coluna.id}
               draggable
-              onDragStart={() => handleDragStart(coluna.id)}
+              onDragStart={(event) => handleDragStart(event, coluna.id)}
               onDragOver={(event) => handleDragOver(event, coluna.id)}
               onDrop={(event) => handleDrop(event, coluna.id)}
               onDragEnd={handleDragEnd}

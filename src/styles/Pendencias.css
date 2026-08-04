@@ -79,11 +79,11 @@
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  transition: left 220ms ease, box-shadow 0.2s ease, transform 220ms ease;
+  transition: left 220ms ease;
 }
 
 .pendencias-column:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .pendencias-column {
@@ -92,8 +92,12 @@
 }
 
 .pendencias-column.is-dragging {
-  opacity: 0.6;
+  opacity: 1;
   cursor: grabbing;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transform: none;
+  transition: none;
+  filter: none;
 }
 
 /* Cores das colunas */
